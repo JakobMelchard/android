@@ -1,0 +1,11 @@
+name: ci
+on: { push: { branches: [main] }, pull_request: {} }
+jobs:
+  hooks:
+    uses: JakobMelchard/.github/.github/workflows/hooks.yml@main
+
+  android:
+    uses: JakobMelchard/.github/.github/workflows/android.yml@main
+    with:
+      android-packages: "platforms;android-35 build-tools;35.0.0"
+      artifact-path: app/build/outputs/apk/debug/*.apk

@@ -11,8 +11,19 @@ android {
     applicationId = "io.lilfeelz.fz"
     minSdk = 29
     targetSdk = 35
-    versionCode = 1
-    versionName = "0.1"
+    versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 1
+    versionName = findProperty("versionName") as String? ?: "0.1"
+  }
+  signingConfigs {
+    create("release") {
+      storeFile = System.getenv("KEYSTORE_PATH")?.let(::file)
+      storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+      keyAlias = "fz"
+      keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+    }
+  }
+  buildTypes {
+    release { signingConfig = signingConfigs.getByName("release") }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17

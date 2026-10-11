@@ -1,5 +1,4 @@
-// Ported by hand from JakobMelchard/.config tokens/tokens.json @v1.2.0, mirroring tokens.swift.
-// build_tokens.py has no Kotlin output yet; replace this file once it does.
+// Hand port of the dark tokens in JakobMelchard/web dist/tokens.json (web has no Kotlin output).
 
 package io.lilfeelz.fz
 

@@ -24,9 +24,9 @@ calling `./gradlew` from a shell with the default JDK.
 
 ## Rules
 
-- Colours and radii come from `Tokens.kt`, never literals. It is a hand port of
-  `JakobMelchard/.config` `tokens/tokens.json` @v1.2.0 mirroring `tokens.swift`;
-  replace it with generated output once `build_tokens.py` emits Kotlin.
+- Colours and radii come from `Tokens.kt`, never literals. It is a hand port of the dark tokens in
+  `JakobMelchard/web` `dist/tokens.json`; `web` has no Kotlin output and this is the only Kotlin
+  consumer, so a port costs less than a generator. Update it by hand when the tokens change.
 - Ranking is `fuzzy` score plus `ln(1 + frecency)`. Frecency is
   `launches / (1 + days since last launch)`, stored per `pkg/cls` in the
   `usage` SharedPreferences as `count|epochMs`.

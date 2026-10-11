@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.ln
@@ -147,7 +148,10 @@ class MainActivity : ComponentActivity() {
           query, { query = it }, singleLine = true,
           textStyle = mono,
           cursorBrush = SolidColor(Tokens.caret),
-          keyboardOptions = KeyboardOptions(autoCorrectEnabled = false, imeAction = ImeAction.Go),
+          // Password type hides Gboard's suggestion strip; no visualTransformation, so text stays visible
+          keyboardOptions = KeyboardOptions(
+            autoCorrectEnabled = false, keyboardType = KeyboardType.Password, imeAction = ImeAction.Go,
+          ),
           keyboardActions = KeyboardActions(onGo = { list.firstOrNull()?.let(::launch) }),
           modifier = Modifier.fillMaxWidth().focusRequester(focus),
         )

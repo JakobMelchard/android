@@ -1,16 +1,18 @@
 # fz
 
-Android launcher that is one text field: type, fuzzy-match app labels, Enter launches the top hit.
+Android launcher that is one text field: type, fuzzy-match app labels, Enter launches the top hit. Empty query lists apps by frecency.
 
 ```sh
 make build   # debug APK
 make test    # unit tests
-make home    # install on SERIAL and set as Home (emulator by default)
+make emu     # boot the fz_pixel7 AVD
+make home    # install on SERIAL (default emulator-5554) and set as Home
 ```
 
-Install from a release with [Obtainium](https://obtainium.imranr.dev): add `https://github.com/JakobMelchard/fz` as the source, APK from GitHub releases. Each release carries a signed `fz-<version>.apk`.
+Releases carry a signed `fz-<version>.apk`; add `https://github.com/JakobMelchard/fz` to [Obtainium](https://obtainium.imranr.dev).
 
 | Path | Contents |
 |---|---|
-| `app/src/main/java/io/lilfeelz/fz/` | the launcher: `MainActivity.kt`, `Tokens.kt` |
+| `app/src/main/java/io/lilfeelz/fz/MainActivity.kt` | app list, fuzzy match, frecency, UI |
+| `app/src/main/java/io/lilfeelz/fz/Tokens.kt` | org design tokens |
 | `app/src/test/` | unit tests for the fuzzy match |

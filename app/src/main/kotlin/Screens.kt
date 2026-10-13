@@ -247,6 +247,17 @@ fun schedule(p: Plan) = buildList {
   }
 }
 
+data class Tally(val xs: List<Reading>, val inZone: Int, val reps: Int)
+
+// Samples taken in the pull windows, the percentage inside the target band, and the pulls that
+// have ended by now. starts holds each phase's start time plus the end of the last one.
+fun tally(ph: List<Phase>, starts: List<Long>, trace: List<Reading>, now: Long, zone: ClosedFloatingPointRange<Float>): Tally {
+  val work = ph.indices.filter { ph[it].name == "Pull" }.map { starts[it] until starts[it + 1] }
+  val xs = trace.filter { r -> r.t >= starts[0] && work.any { r.t in it } }
+  val inZone = if (xs.isEmpty()) 0 else xs.count { it.kg in zone } * 100 / xs.size
+  return Tally(xs, inZone, work.count { it.last < now })
+}
+
 @Composable
 fun Repeaters(scale: Scale, store: Store) {
   val now = rememberNow()
@@ -307,15 +318,13 @@ fun Repeaters(scale: Scale, store: Store) {
   val i = starts.indexOfLast { it <= now }.coerceIn(0, ph.size - 1)
   val zone = p.lo..p.hi
   val force = scale.trace.lastOrNull()?.kg ?: 0f
-  val work = ph.indices.filter { ph[it].name == "Pull" }.map { starts[it] until starts[it + 1] }
-  val xs = scale.trace.filter { r -> r.t >= s && work.any { r.t in it } }
-  val inZone = if (xs.isEmpty()) 0 else xs.count { it.kg in zone } * 100 / xs.size
+  val inZone = tally(ph, starts, scale.trace, now, zone).inZone
   val finish = {
-    val reps = work.count { it.last < SystemClock.elapsedRealtime() }
-    if (xs.isNotEmpty()) {
+    val t = tally(ph, starts, scale.trace, SystemClock.elapsedRealtime(), zone)
+    if (t.xs.isNotEmpty()) {
       done = Session(
-        System.currentTimeMillis(), "repeaters", "Both", xs.maxOf { it.kg }, avgLoaded(xs), store.body,
-        "$reps/${work.size} reps ${p.work}/${p.rest} s, $inZone% in ${kg(p.lo)} to ${kg(p.hi)}", store.grip,
+        System.currentTimeMillis(), "repeaters", "Both", t.xs.maxOf { it.kg }, avgLoaded(t.xs), store.body,
+        "${t.reps}/${ph.count { it.name == "Pull" }} reps ${p.work}/${p.rest} s, ${t.inZone}% in ${kg(p.lo)} to ${kg(p.hi)}", store.grip,
       ).also(store::add)
     }
     t0 = null
@@ -353,7 +362,7 @@ fun Repeaters(scale: Scale, store: Store) {
     }
   }
   LaunchedEffect(i) { if (i > 0) beep(if (pulling) 400 else 150) }
-  // The timer outlives this composition's xs, so it must call the latest finish.
+  // The timer outlives this composition, so it must call the latest finish.
   val fin by rememberUpdatedState(finish)
   LaunchedEffect(s) {
     delay(starts.last() - SystemClock.elapsedRealtime())

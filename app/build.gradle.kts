@@ -15,12 +15,12 @@ android {
     versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 1
     versionName = findProperty("versionName") as String? ?: "0.1.0"
   }
-  // Signed from the environment (release.yml); the same keystore signs fz and workouts.
+  // Signed from the environment (release.yml picks the keystore's alias); the org keystore from Infisical /release.
   signingConfigs {
     create("release") {
       System.getenv("KEYSTORE_PATH")?.let { storeFile = file(it) }
       storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-      keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "fz"
+      keyAlias = System.getenv("ANDROID_KEY_ALIAS")
       keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
     }
   }

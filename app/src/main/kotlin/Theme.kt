@@ -1,7 +1,22 @@
 package io.jakobmelchard.pull
 
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Text
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -131,3 +146,58 @@ fun Panel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> 
     content = content,
   )
 }
+
+// Screen frame: scrolling content, and the one primary action pinned in the thumb zone.
+@Composable
+fun Screen(action: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
+  Column(Modifier.fillMaxSize()) {
+    Column(
+      Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
+      verticalArrangement = Arrangement.spacedBy(12.dp),
+      content = content,
+    )
+    action?.let { Box(Modifier.padding(16.dp)) { it() } }
+  }
+}
+
+@Composable
+fun Action(text: String, color: Color = LocalPalette.current.accent, onClick: () -> Unit) =
+  Button(
+    onClick,
+    Modifier.fillMaxWidth().height(60.dp),
+    shape = RoundedCornerShape(10.dp),
+    colors = ButtonDefaults.buttonColors(containerColor = color, contentColor = LocalPalette.current.bg),
+  ) { Text(text, style = MaterialTheme.typography.titleMedium) }
+
+@Composable
+fun RowScope.Stat(label: String, value: String, color: Color = LocalPalette.current.fg) =
+  Column(Modifier.weight(1f)) {
+    Text(label, color = LocalPalette.current.muted, style = MaterialTheme.typography.labelMedium)
+    Text(value, color = color, style = MaterialTheme.typography.titleMedium)
+  }
+
+@Composable
+fun Seg(options: List<String>, selected: String, onSelect: (String) -> Unit) {
+  val p = LocalPalette.current
+  Row(
+    Modifier.fillMaxWidth().border(1.dp, p.line, RoundedCornerShape(10.dp)).padding(4.dp),
+    horizontalArrangement = Arrangement.spacedBy(4.dp),
+  ) {
+    options.forEach { o ->
+      val on = o == selected
+      Box(
+        Modifier.weight(1f).height(48.dp).background(if (on) p.accent else Color.Transparent, RoundedCornerShape(8.dp))
+          .selectable(on, role = Role.RadioButton) { onSelect(o) },
+        contentAlignment = Alignment.Center,
+      ) { Text(o, color = if (on) p.bg else p.muted, style = MaterialTheme.typography.labelLarge) }
+    }
+  }
+}
+
+@Composable
+fun Pill(text: String, color: Color, enabled: Boolean = true, onClick: () -> Unit) =
+  Box(
+    Modifier.heightIn(min = 48.dp).border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(999.dp))
+      .clickable(enabled, role = Role.Button, onClick = onClick).padding(horizontal = 16.dp),
+    contentAlignment = Alignment.Center,
+  ) { Text(text, color = color, style = MaterialTheme.typography.labelLarge) }

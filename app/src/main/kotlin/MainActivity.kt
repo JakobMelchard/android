@@ -1,5 +1,8 @@
 package io.jakobmelchard.pull
 
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
@@ -18,8 +21,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
@@ -35,7 +40,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -130,9 +134,9 @@ fun App(scale: Scale, store: Store, connect: () -> Unit) {
       }
     },
   ) { pad ->
-    // History scrolls itself; a scrolling parent would break its LazyColumn.
-    val scroll = if (tab == 4) Modifier else Modifier.verticalScroll(rememberScrollState())
-    Column(Modifier.padding(pad).then(scroll).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    // Each screen owns its scrolling and its bottom action.
+    // The keyboard pushes content up instead of covering the fields at the bottom.
+    Box(Modifier.padding(pad).consumeWindowInsets(pad).imePadding()) {
       when (tab) {
         0 -> Live(scale, store)
         1 -> Max(scale, store)
@@ -151,18 +155,22 @@ fun Header(scale: Scale, connect: () -> Unit) {
   val live = last != null && now - last.t < 3_000
   val p = LocalPalette.current
   Row(
-    Modifier.fillMaxWidth().statusBarsPadding().padding(start = 16.dp, end = 8.dp),
+    Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
     verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     Text("pull", style = MaterialTheme.typography.titleMedium, color = p.pink)
+    Box(Modifier.size(10.dp).background(if (live) p.green else if (scale.scanning) p.orange else p.red, CircleShape))
     Text(
-      if (live) "  scale connected" else if (scale.scanning) "  searching" else "  ${scale.status.lowercase()}",
+      if (live) "scale" else if (scale.scanning) "searching" else scale.status.lowercase(),
       Modifier.weight(1f),
-      style = MaterialTheme.typography.bodySmall,
-      color = if (live) p.green else p.muted,
+      style = MaterialTheme.typography.labelMedium,
+      color = p.muted,
+      maxLines = 1,
+      overflow = TextOverflow.Ellipsis,
     )
-    if (!scale.scanning) TextButton(onClick = connect) { Text("Connect") }
-    TextButton(onClick = scale::zero, enabled = live) { Text("Tare") }
+    if (!scale.scanning) Pill("Connect", p.accent, onClick = connect)
+    Pill("Tare", if (live) p.accent else p.muted, enabled = live, onClick = scale::zero)
   }
 }
 

@@ -1,30 +1,34 @@
 package io.jakobmelchard.pull
 
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.text.TextAutoSize
+import androidx.compose.foundation.text.BasicText
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.SystemClock
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -58,17 +62,32 @@ fun secs(ms: Long) = "${(ms.coerceAtLeast(0) + 999) / 1000} s"
 fun pct(kg: Float, body: Float) = if (body > 0f) "%.0f%%".format(kg / body * 100) else "-"
 
 @Composable
+// Shrinks to stay on one line: 80sp only fits about six mono characters on a 360dp phone.
 fun Big(text: String, color: Color = LocalPalette.current.pink) =
-  Text(text, style = MaterialTheme.typography.displayLarge, color = color)
+  BasicText(
+    text,
+    style = MaterialTheme.typography.displayLarge.copy(color = color),
+    maxLines = 1,
+    softWrap = false,
+    autoSize = TextAutoSize.StepBased(minFontSize = 32.sp, maxFontSize = 80.sp),
+  )
 
+@Composable
+fun Label(text: String) = Text(text, color = LocalPalette.current.muted, style = MaterialTheme.typography.labelMedium)
+
+// The grip pill that heads Max and Repeaters; opens the grip menu.
 @Composable
 fun GripPicker(store: Store) {
   var open by remember { mutableStateOf(false) }
   val p = LocalPalette.current
   Box {
-    Row(Modifier.clickable { open = true }.padding(vertical = 8.dp)) {
-      Text("grip ", color = p.muted)
-      Text("${store.gripName(store.grip)} v", color = p.purple, style = MaterialTheme.typography.titleMedium)
+    Row(
+      Modifier.border(1.dp, p.purple.copy(alpha = 0.5f), RoundedCornerShape(999.dp)).clickable { open = true }
+        .padding(horizontal = 16.dp, vertical = 10.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Text(store.gripName(store.grip), color = p.purple, style = MaterialTheme.typography.titleSmall)
+      Text("  v", color = p.muted, style = MaterialTheme.typography.labelMedium)
     }
     DropdownMenu(open, { open = false }) {
       store.grips.forEach { g ->
@@ -87,22 +106,33 @@ fun GripPicker(store: Store) {
 @Composable
 fun Live(scale: Scale, store: Store) {
   val now = rememberNow()
+  val p = LocalPalette.current
   var start by remember { mutableStateOf<Long?>(null) }
-  val from = start ?: (now - 10_000)
+  val s = start
+  val from = s ?: (now - 10_000)
   val pts = scale.trace.filter { it.t >= from }
   val peak = pts.maxOfOrNull { it.kg } ?: 0f
-  Big(kg(scale.trace.lastOrNull()?.kg ?: 0f))
-  Text("peak ${kg(peak)}   avg ${kg(avgLoaded(pts))}", color = LocalPalette.current.muted)
-  Graph(pts, from, maxOf(now, from + 10_000))
-  Button({
-    val s = start
-    if (s == null) {
-      start = now
-    } else {
-      if (pts.isNotEmpty()) store.add(Session(System.currentTimeMillis(), "live", "", peak, avgLoaded(pts), store.body, secs(now - s)))
-      start = null
+  Screen({
+    Action(if (s == null) "Record" else "Stop and save", if (s == null) p.accent else p.orange) {
+      if (s == null) {
+        start = now
+      } else {
+        if (pts.isNotEmpty()) store.add(Session(System.currentTimeMillis(), "live", "", peak, avgLoaded(pts), store.body, secs(now - s)))
+        start = null
+      }
     }
-  }) { Text(if (start == null) "Record" else "Stop and save") }
+  }) {
+    Panel {
+      Label(if (s == null) "force" else "recording")
+      Big(kg(scale.trace.lastOrNull()?.kg ?: 0f))
+      Row {
+        Stat("peak", kg(peak))
+        Stat("avg", kg(avgLoaded(pts)))
+        Stat(if (s == null) "window" else "time", secs(now - from))
+      }
+    }
+    Panel { Graph(pts, from, maxOf(now, from + 10_000)) }
+  }
 }
 
 @Composable
@@ -116,52 +146,77 @@ fun Max(scale: Scale, store: Store) {
   var result by remember { mutableStateOf<Pair<Session, Float?>?>(null) }
   val s = t0
   if (s == null) {
-    GripPicker(store)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      listOf("L", "R", "Both").forEach { FilterChip(hand == it, { hand = it }, { Text(it) }) }
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      NumField("Bodyweight kg", store.body, Modifier.weight(1f)) { store.body = it }
-      NumField("Pull s", dur, Modifier.weight(1f)) { dur = it }
-    }
-    Panel {
-      Text("high score $hand", color = p.muted, style = MaterialTheme.typography.labelMedium)
+    Screen({
+      Action("Start") {
+        result = null
+        t0 = now + 3_000
+      }
+    }) {
+      GripPicker(store)
+      Seg(listOf("L", "R", "Both"), hand) { hand = it }
+      result?.let { (r, prev) ->
+        Panel {
+          when {
+            r.peak <= 0f -> Text("No data, nothing saved", color = p.orange, style = MaterialTheme.typography.titleMedium)
+            prev == null -> Label("first test")
+            r.peak > prev -> Text("New high score", color = p.green, style = MaterialTheme.typography.titleMedium)
+            else -> Label("last pull")
+          }
+          if (r.peak > 0f) {
+            Big(kg(r.peak), if (prev != null && r.peak > prev) p.green else p.pink)
+            Row {
+              Stat("bodyweight", pct(r.peak, r.body))
+              Stat("previous best", prev?.let { kg(it) } ?: "-")
+            }
+          }
+        }
+      }
       val best = store.best(store.grip, hand)
-      Text(best?.let { "${kg(it)}  ${pct(it, store.body)} bw" } ?: "not tested yet", style = MaterialTheme.typography.titleMedium)
-    }
-    Button({
-      result = null
-      t0 = now + 3_000
-    }) { Text("Start") }
-    result?.let { (r, prev) ->
       Panel {
-        if (r.peak <= 0f) {
-          Text("No data, nothing saved", color = p.orange, style = MaterialTheme.typography.titleMedium)
-          return@Panel
+        Label("high score $hand")
+        Big(best?.let { kg(it) } ?: "-", if (best != null) p.pink else p.muted)
+        Row {
+          Stat("bodyweight", best?.let { pct(it, store.body) } ?: "-")
+          Stat("tests", "${store.sessions.count { it.type == "max" && it.grip == store.grip && it.hand == hand }}")
         }
-        if (prev == null) {
-          Text("First test", color = p.green, style = MaterialTheme.typography.titleMedium)
-        } else if (r.peak > prev) {
-          Text("New high score", color = p.green, style = MaterialTheme.typography.titleMedium)
+      }
+      Panel {
+        Label("setup")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          NumField("Bodyweight kg", store.body, Modifier.weight(1f)) { store.body = it }
+          NumField("Pull s", dur, Modifier.weight(1f)) { dur = it.coerceAtLeast(1f) }
         }
-        Big(kg(r.peak))
-        Text("${pct(r.peak, r.body)} bodyweight", color = p.muted)
-        prev?.let { Text("previous best ${r.hand}: ${kg(it)}", color = p.muted) }
       }
     }
     return
   }
   val end = s + (dur * 1000).toLong()
   val pts = scale.trace.filter { it.t >= s - 3_000 }
-  Text(store.gripName(store.grip), color = p.purple, style = MaterialTheme.typography.titleMedium)
-  Text(
-    if (now < s) "get ready ${secs(s - now)}" else "pull ${secs(end - now)}",
-    style = MaterialTheme.typography.headlineMedium,
-    color = if (now < s) p.orange else p.accent,
-  )
-  Big(kg(pts.filter { it.t >= s }.maxOfOrNull { it.kg } ?: 0f))
-  Graph(pts, s - 3_000, end)
-  OutlinedButton({ t0 = null }) { Text("Cancel") }
+  val ready = now < s
+  Screen({ Action("Cancel", p.red) { t0 = null } }) {
+    Text("${store.gripName(store.grip)}  $hand", color = p.purple, style = MaterialTheme.typography.titleSmall)
+    Panel {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+          if (ready) "get ready" else "pull",
+          Modifier.weight(1f),
+          color = if (ready) p.orange else p.accent,
+          style = MaterialTheme.typography.headlineMedium,
+        )
+        Text(secs(if (ready) s - now else end - now), style = MaterialTheme.typography.headlineMedium)
+      }
+      LinearProgressIndicator(
+        { if (ready) 0f else ((now - s).toFloat() / (end - s)).coerceIn(0f, 1f) },
+        Modifier.fillMaxWidth(),
+        color = p.accent,
+        trackColor = p.line,
+        drawStopIndicator = {},
+      )
+      Label("peak")
+      Big(kg(pts.filter { it.t >= s }.maxOfOrNull { it.kg } ?: 0f))
+    }
+    Panel { Graph(pts, s - 3_000, end) }
+  }
   LaunchedEffect(s) {
     delay(s - SystemClock.elapsedRealtime())
     beep()
@@ -200,28 +255,48 @@ fun Repeaters(scale: Scale, store: Store) {
   val p = store.plan
   val s = t0
   if (s == null) {
-    GripPicker(store)
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      NumField("Pull s", p.work.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(work = it.toInt().coerceAtLeast(1)) }
-      NumField("Rest s", p.rest.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(rest = it.toInt().coerceAtLeast(0)) }
-      NumField("Reps", p.reps.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(reps = it.toInt().coerceAtLeast(1)) }
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      NumField("Sets", p.sets.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(sets = it.toInt().coerceAtLeast(1)) }
-      NumField("Set rest s", p.setRest.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(setRest = it.toInt().coerceAtLeast(0)) }
-    }
-    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-      NumField("Target min kg", p.lo, Modifier.weight(1f)) { store.plan = store.plan.copy(lo = it) }
-      NumField("Target max kg", p.hi, Modifier.weight(1f)) { store.plan = store.plan.copy(hi = it) }
-    }
-    Button({
-      done = null
-      t0 = now
-    }) { Text("Start") }
-    done?.let {
+    Screen({
+      Action("Start") {
+        done = null
+        t0 = now
+      }
+    }) {
+      GripPicker(store)
+      done?.let {
+        Panel {
+          Label("last session")
+          Row {
+            Stat("avg", kg(it.avg), pal.pink)
+            Stat("peak", kg(it.peak))
+          }
+          Label(it.note)
+        }
+      }
       Panel {
-        Text("avg ${kg(it.avg)}   peak ${kg(it.peak)}", style = MaterialTheme.typography.titleMedium)
-        Text(it.note, color = pal.muted)
+        Label("plan")
+        Text("${p.reps} x ${p.work}/${p.rest} s", style = MaterialTheme.typography.headlineMedium)
+        Row {
+          Stat("sets", "${p.sets}")
+          Stat("set rest", "${p.setRest} s")
+          Stat("total", secs(schedule(p).sumOf { it.ms }))
+        }
+        Text("target ${kg(p.lo)} to ${kg(p.hi)}", color = pal.green, style = MaterialTheme.typography.titleSmall)
+      }
+      Panel {
+        Label("edit")
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          NumField("Pull s", p.work.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(work = it.toInt().coerceAtLeast(1)) }
+          NumField("Rest s", p.rest.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(rest = it.toInt().coerceAtLeast(0)) }
+          NumField("Reps", p.reps.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(reps = it.toInt().coerceAtLeast(1)) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          NumField("Sets", p.sets.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(sets = it.toInt().coerceAtLeast(1)) }
+          NumField("Set rest s", p.setRest.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(setRest = it.toInt().coerceAtLeast(0)) }
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          NumField("Target min kg", p.lo, Modifier.weight(1f)) { store.plan = store.plan.copy(lo = it) }
+          NumField("Target max kg", p.hi, Modifier.weight(1f)) { store.plan = store.plan.copy(hi = it) }
+        }
       }
     }
     return
@@ -245,13 +320,37 @@ fun Repeaters(scale: Scale, store: Store) {
     t0 = null
   }
   val pulling = ph[i].name == "Pull"
-  Text(store.gripName(store.grip), color = pal.purple, style = MaterialTheme.typography.titleMedium)
-  Text(ph[i].name.lowercase(), style = MaterialTheme.typography.headlineMedium, color = if (pulling) pal.accent else pal.orange)
-  Text("${secs(starts[i + 1] - now)}   set ${ph[i].set}/${p.sets}   rep ${ph[i].rep}/${p.reps}", color = pal.muted)
-  Big(kg(force), if (!pulling) pal.fg else if (force in zone) pal.green else pal.red)
-  Text("$inZone% in target", color = pal.muted)
-  Graph(scale.trace.filter { it.t >= now - 15_000 }, now - 15_000, now, zone)
-  OutlinedButton(finish) { Text("Stop and save") }
+  Screen({ Action("Stop and save", pal.orange, finish) }) {
+    Text(store.gripName(store.grip), color = pal.purple, style = MaterialTheme.typography.titleSmall)
+    Panel {
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+          ph[i].name.lowercase(),
+          Modifier.weight(1f),
+          color = if (pulling) pal.accent else pal.orange,
+          style = MaterialTheme.typography.headlineMedium,
+        )
+        Text(secs(starts[i + 1] - now), style = MaterialTheme.typography.headlineMedium)
+      }
+      LinearProgressIndicator(
+        { ((now - s).toFloat() / (starts.last() - s)).coerceIn(0f, 1f) },
+        Modifier.fillMaxWidth(),
+        color = pal.accent,
+        trackColor = pal.line,
+        drawStopIndicator = {},
+      )
+      Row {
+        Stat("set", "${ph[i].set}/${p.sets}")
+        Stat("rep", "${ph[i].rep}/${p.reps}")
+        Stat("in target", "$inZone%", if (inZone >= 70) pal.green else pal.fg)
+      }
+      ph.getOrNull(i + 1)?.let { Label("next: ${it.name.lowercase()} ${secs(it.ms)}") }
+    }
+    Panel {
+      Big(kg(force), if (!pulling) pal.fg else if (force in zone) pal.green else pal.red)
+      Graph(scale.trace.filter { it.t >= now - 15_000 }, now - 15_000, now, zone)
+    }
+  }
   LaunchedEffect(i) { if (i > 0) beep(if (pulling) 400 else 150) }
   // The timer outlives this composition's xs, so it must call the latest finish.
   val fin by rememberUpdatedState(finish)
@@ -267,49 +366,51 @@ fun Grips(store: Store) {
   val p = LocalPalette.current
   val fmt = remember { SimpleDateFormat("d MMM", Locale.getDefault()) }
   var name by remember { mutableStateOf("") }
-  Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-    OutlinedTextField(name, { name = it }, Modifier.weight(1f), label = { Text("New grip") }, singleLine = true)
-    TextButton(
-      {
-        store.addGrip(name.trim())
-        name = ""
-      },
-      enabled = name.isNotBlank(),
-    ) { Text("Add", color = if (name.isNotBlank()) p.green else p.muted) }
-  }
   // Delete takes two taps: the first arms it for that grip only.
   var arm by remember { mutableStateOf<Long?>(null) }
-  store.grips.forEach { g ->
-    val on = g.id == store.grip
-    val xs = store.sessions.filter { it.grip == g.id }
-    Panel(Modifier.clickable { store.grip = g.id }) {
-      Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(if (on) "> " else "  ", color = p.accent, style = MaterialTheme.typography.titleMedium)
-        Text(g.name, Modifier.weight(1f), color = p.purple, style = MaterialTheme.typography.titleMedium)
-        if (arm == g.id) {
-          TextButton({
-            store.removeGrip(g)
-            arm = null
-          }) { Text("Delete?", color = p.red) }
-        } else {
-          IconButton({ arm = g.id }) { Icon(Icons.Default.Delete, "Delete ${g.name}", tint = p.muted) }
-        }
-      }
-      Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        listOf("L", "R", "Both").forEach { h ->
-          Column {
-            Text(h, color = p.muted, style = MaterialTheme.typography.labelMedium)
-            val b = store.best(g.id, h)
-            Text(b?.let { kg(it) } ?: "-", color = if (b != null) p.pink else p.muted, style = MaterialTheme.typography.titleSmall)
-            b?.let { Text(pct(it, store.body), color = p.muted, style = MaterialTheme.typography.labelMedium) }
+  Screen {
+    store.grips.forEach { g ->
+      val xs = store.sessions.filter { it.grip == g.id }
+      Panel(Modifier.clickable { store.grip = g.id }) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+          Text(g.name, Modifier.weight(1f), color = p.purple, style = MaterialTheme.typography.titleMedium)
+          if (g.id == store.grip) Label("current")
+          if (arm == g.id) {
+            TextButton({
+              store.removeGrip(g)
+              arm = null
+            }) { Text("Delete?", color = p.red) }
+          } else {
+            IconButton({ arm = g.id }) { Icon(Icons.Default.Delete, "Delete ${g.name}", tint = p.muted) }
           }
         }
+        Row {
+          listOf("L", "R", "Both").forEach { h ->
+            val b = store.best(g.id, h)
+            Stat(h, b?.let { kg(it) } ?: "-", if (b != null) p.pink else p.muted)
+          }
+        }
+        val rep = xs.filter { it.type == "repeaters" }.maxOfOrNull { it.avg }
+        val last = xs.maxOfOrNull { it.at }
+        if (last != null) {
+          Label(
+            listOfNotNull(
+              rep?.let { "repeaters avg ${kg(it)}" },
+              "last ${fmt.format(Date(last))}",
+              "${xs.size} session${if (xs.size == 1) "" else "s"}",
+            ).joinToString("  "),
+          )
+        }
       }
-      xs.filter { it.type == "repeaters" }.maxOfOrNull { it.avg }?.let {
-        Text("best repeaters avg ${kg(it)}", color = p.muted, style = MaterialTheme.typography.bodySmall)
-      }
-      xs.maxOfOrNull { it.at }?.let {
-        Text("last ${fmt.format(Date(it))}, ${xs.size} session${if (xs.size == 1) "" else "s"}", color = p.muted, style = MaterialTheme.typography.bodySmall)
+    }
+    Panel {
+      Label("new grip")
+      Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        OutlinedTextField(name, { name = it }, Modifier.weight(1f), placeholder = { Text("25 mm edge") }, singleLine = true)
+        Pill("Add", if (name.isNotBlank()) p.green else p.muted, enabled = name.isNotBlank()) {
+          store.addGrip(name.trim())
+          name = ""
+        }
       }
     }
   }
@@ -319,26 +420,40 @@ fun Grips(store: Store) {
 fun History(store: Store) {
   val p = LocalPalette.current
   val max = store.sessions.filter { it.type == "max" && it.grip == store.grip }.reversed()
-  if (max.size >= 2) {
-    Row {
-      Text("max pulls ", color = p.muted)
-      Text(store.gripName(store.grip), color = p.purple, style = MaterialTheme.typography.titleMedium)
-    }
-    Trend(max)
-  }
   val fmt = remember { SimpleDateFormat("d MMM HH:mm", Locale.getDefault()) }
-  LazyColumn {
-    items(store.sessions, key = { it.at }) { s ->
-      Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-        Column(Modifier.weight(1f)) {
-          Text("${fmt.format(Date(s.at))}  ${s.type} ${s.hand}", color = p.muted, style = MaterialTheme.typography.labelMedium)
-          if (s.grip != 0L) Text(store.gripName(s.grip), color = p.purple, style = MaterialTheme.typography.titleSmall)
-          Text("peak ${kg(s.peak)} (${pct(s.peak, s.body)} bw)   avg ${kg(s.avg)}")
-          Text(s.note, color = p.muted, style = MaterialTheme.typography.bodySmall)
+  // LazyColumn scrolls itself, so this screen does not use Screen.
+  LazyColumn(
+    Modifier.fillMaxSize(),
+    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+    verticalArrangement = Arrangement.spacedBy(12.dp),
+  ) {
+    if (max.size >= 2) {
+      item {
+        Panel {
+          Row(verticalAlignment = Alignment.CenterVertically) {
+            Label("max pulls  ")
+            Text(store.gripName(store.grip), color = p.purple, style = MaterialTheme.typography.titleSmall)
+          }
+          Trend(max)
         }
-        IconButton({ store.remove(s) }) { Icon(Icons.Default.Delete, "Delete", tint = p.muted) }
       }
-      HorizontalDivider(color = p.line)
+    }
+    items(store.sessions, key = { it.at }) { s ->
+      Panel {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          Column(Modifier.weight(1f)) {
+            Label("${fmt.format(Date(s.at))}  ${s.type} ${s.hand}")
+            if (s.grip != 0L) Text(store.gripName(s.grip), color = p.purple, style = MaterialTheme.typography.titleSmall)
+          }
+          IconButton({ store.remove(s) }) { Icon(Icons.Default.Delete, "Delete", tint = p.muted) }
+        }
+        Row {
+          Stat("peak", kg(s.peak), p.pink)
+          Stat("avg", kg(s.avg))
+          Stat("bw", pct(s.peak, s.body))
+        }
+        if (s.note.isNotEmpty()) Label(s.note)
+      }
     }
   }
 }

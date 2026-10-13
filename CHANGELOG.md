@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/JakobMelchard/pull/compare/v0.1.2...v0.1.3) (2026-10-13)
+
+
+### Features
+
+* add an adaptive launcher icon in the org palette ([#17](https://github.com/JakobMelchard/pull/issues/17)) ([399306e](https://github.com/JakobMelchard/pull/commit/399306ee2f6f039a01dbdb5d12d8b05b20f9c272))
+
 ## [0.1.2](https://github.com/JakobMelchard/pull/compare/v0.1.1...v0.1.2) (2026-10-13)
 
 

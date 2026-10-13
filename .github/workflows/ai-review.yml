@@ -1,0 +1,20 @@
+name: ai-review
+
+# Label a ready PR ai:pr-agent for one review.
+on:
+  pull_request:
+    types: [labeled]
+
+concurrency:
+  group: ai-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  review:
+    uses: JakobMelchard/.github/.github/workflows/ai-review.yml@e1ef2b10e7ee0c5426f78d63a4e9c6a0ce9b3fe9 # v1.6.0

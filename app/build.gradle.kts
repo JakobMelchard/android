@@ -11,8 +11,21 @@ android {
     applicationId = "io.jakobmelchard.pull"
     minSdk = 29
     targetSdk = 35
-    versionCode = 1
-    versionName = "0.1.0"
+    // release.yml passes both from the release tag; defaults for local builds.
+    versionCode = (findProperty("versionCode") as String?)?.toInt() ?: 1
+    versionName = findProperty("versionName") as String? ?: "0.1.0"
+  }
+  // Signed from the environment (release.yml); the same keystore signs fz and workouts.
+  signingConfigs {
+    create("release") {
+      System.getenv("KEYSTORE_PATH")?.let { storeFile = file(it) }
+      storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+      keyAlias = System.getenv("ANDROID_KEY_ALIAS") ?: "fz"
+      keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
+    }
+  }
+  buildTypes {
+    release { signingConfig = signingConfigs.getByName("release") }
   }
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17

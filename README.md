@@ -2,13 +2,15 @@
 
 Android force trainer for the WH-C06 Bluetooth crane scale, a cheap stand-in for a Tindeq Progressor: live force, max pull tests, repeaters and per-grip high scores.
 
-<p>
-  <img alt="Live force with peak, average and a 10 s graph" src="docs/screenshots/live.png" width="190">
-  <img alt="Max test setup with grip, hand and the high score" src="docs/screenshots/max.png" width="190">
-  <img alt="Repeaters mid-pull with the target band" src="docs/screenshots/repeaters.png" width="190">
-  <img alt="Grips with best max per hand" src="docs/screenshots/grips.png" width="190">
-  <img alt="History with the max-pull trend" src="docs/screenshots/history.png" width="190">
-</p>
+<table>
+  <tr>
+    <td align="center"><img alt="Live force with peak, average and a 10 s graph" src="docs/screenshots/live.png" width="160"><br><sub>Live</sub></td>
+    <td align="center"><img alt="Max test setup with grip, hand and the high score" src="docs/screenshots/max.png" width="160"><br><sub>Max</sub></td>
+    <td align="center"><img alt="Repeaters mid-pull with the target band" src="docs/screenshots/repeaters.png" width="160"><br><sub>Repeaters</sub></td>
+    <td align="center"><img alt="Grips with best max per hand" src="docs/screenshots/grips.png" width="160"><br><sub>Grips</sub></td>
+    <td align="center"><img alt="History with the max-pull trend" src="docs/screenshots/history.png" width="160"><br><sub>History</sub></td>
+  </tr>
+</table>
 
 Screenshots use demo data and synthetic pulls.
 
@@ -18,6 +20,12 @@ brew install prek && prek install    # hooks pinned in .pre-commit-config.yaml
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 scripts/screenshots.sh               # emulator only: ANDROID_SERIAL=emulator-5554
 ```
+
+## Install
+
+Each release carries a signed `pull-<version>.apk`. Add `https://github.com/JakobMelchard/pull` to [Obtainium](https://github.com/ImranR98/Obtainium) (with a GitHub token, the repo is private) to get updates, or download the APK from the release.
+
+Releases come from release-please: merging the release PR on `main` tags it, and `release.yml` builds the APK with the version from the tag and signs it with the org keystore from Infisical (`/release`). A debug build from `./gradlew` is signed with the local debug key, so switching between the two needs an uninstall first.
 
 ## Screens
 
@@ -56,5 +64,6 @@ Everything stays on the phone: sessions in `files/sessions.json`, grips, bodywei
 | `app/src/main/kotlin/Theme.kt` | palette, type scale and shared components |
 | `app/src/main/kotlin/tokens/Tokens.kt` | colours and radii vendored from [JakobMelchard/web](https://github.com/JakobMelchard/web) `dist/tokens.kt` |
 | `scripts/screenshots.sh`, `scripts/demo/` | screenshot run and its demo sessions |
+| `.github/workflows/release.yml` | release-please, then the signed APK on the release |
 
 Scaffolded from [JakobMelchard/template](https://github.com/JakobMelchard/template) (`android`). Templated files (CI caller, `.pre-commit-config.yaml`, devcontainer, org configs) come back through `copier update`; Renovate opens those updates as PRs.

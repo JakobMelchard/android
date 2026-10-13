@@ -1,5 +1,7 @@
 package io.jakobmelchard.pull
 
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
@@ -77,6 +79,20 @@ class Scale(private val ctx: Context) {
     ctx.getSystemService(BluetoothManager::class.java).adapter?.bluetoothLeScanner?.stopScan(cb)
     scanning = false
     status = "Not scanning"
+  }
+
+  // Synthetic 7 s pulls with 3 s rests, about 7 readings a second like the real scale.
+  suspend fun demo() {
+    scanning = true
+    val t0 = SystemClock.elapsedRealtime()
+    while (true) {
+      val t = SystemClock.elapsedRealtime()
+      val c = (t - t0) % 10_000 / 1000f
+      val kg = if (c < 7f) 23f * minOf(1f, c / 0.6f) - c * 0.3f + Random.nextFloat() - 0.5f else 0.3f
+      trace.add(Reading(kg.coerceAtLeast(0f) - tare, true, t))
+      if (trace.size > 20_000) trace.removeRange(0, 5_000)
+      delay(140)
+    }
   }
 
   fun zero() {

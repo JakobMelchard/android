@@ -1,5 +1,8 @@
 package io.jakobmelchard.pull
 
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
+import android.content.pm.ApplicationInfo
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.consumeWindowInsets
@@ -64,6 +67,7 @@ import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
   private lateinit var scale: Scale
+  private var demo = false
 
   private val perms =
     if (Build.VERSION.SDK_INT >= 31) {
@@ -85,18 +89,20 @@ class MainActivity : ComponentActivity() {
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     scale = Scale(applicationContext)
     val store = Store(applicationContext)
-    if (!granted()) ask.launch(perms)
+    // Debug builds started with --ez demo true draw synthetic pulls instead of scanning (scripts/screenshots.sh).
+    demo = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 && intent.getBooleanExtra("demo", false)
+    if (demo) lifecycleScope.launch { scale.demo() } else if (!granted()) ask.launch(perms)
     setContent { PullTheme { App(scale, store) { if (granted()) scale.start() else ask.launch(perms) } } }
   }
 
   override fun onStart() {
     super.onStart()
-    if (granted()) scale.start()
+    if (!demo && granted()) scale.start()
   }
 
   override fun onStop() {
     super.onStop()
-    scale.stop()
+    if (!demo) scale.stop()
   }
 }
 

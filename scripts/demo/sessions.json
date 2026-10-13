@@ -1,0 +1,342 @@
+[
+ {
+  "at": 1791763200000,
+  "type": "max",
+  "hand": "L",
+  "peak": 18.4,
+  "avg": 15.9,
+  "body": 70,
+  "note": "7 s",
+  "grip": 5
+ },
+ {
+  "at": 1791676860000,
+  "type": "max",
+  "hand": "R",
+  "peak": 30.2,
+  "avg": 26.3,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1791676800000,
+  "type": "max",
+  "hand": "L",
+  "peak": 32.4,
+  "avg": 28.2,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1791424800000,
+  "type": "max",
+  "hand": "Both",
+  "peak": 45.2,
+  "avg": 38.4,
+  "body": 70,
+  "note": "7 s",
+  "grip": 3
+ },
+ {
+  "at": 1791421200000,
+  "type": "repeaters",
+  "hand": "Both",
+  "peak": 26.4,
+  "avg": 23.0,
+  "body": 70,
+  "note": "18/18 reps 7/3 s, 78% in 20.0 kg to 25.0 kg",
+  "grip": 1
+ },
+ {
+  "at": 1791417660000,
+  "type": "max",
+  "hand": "R",
+  "peak": 29.5,
+  "avg": 25.7,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1791417600000,
+  "type": "max",
+  "hand": "L",
+  "peak": 32.1,
+  "avg": 27.9,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1791158460000,
+  "type": "max",
+  "hand": "R",
+  "peak": 29.4,
+  "avg": 25.6,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1791158400000,
+  "type": "max",
+  "hand": "L",
+  "peak": 31.1,
+  "avg": 27.1,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790902800000,
+  "type": "repeaters",
+  "hand": "Both",
+  "peak": 25.9,
+  "avg": 22.5,
+  "body": 70,
+  "note": "18/18 reps 7/3 s, 76% in 20.0 kg to 25.0 kg",
+  "grip": 1
+ },
+ {
+  "at": 1790899260000,
+  "type": "max",
+  "hand": "R",
+  "peak": 29.6,
+  "avg": 25.8,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790899200000,
+  "type": "max",
+  "hand": "L",
+  "peak": 30.8,
+  "avg": 26.8,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790640060000,
+  "type": "max",
+  "hand": "R",
+  "peak": 28.3,
+  "avg": 24.6,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790640000000,
+  "type": "max",
+  "hand": "L",
+  "peak": 29.7,
+  "avg": 25.8,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790388000000,
+  "type": "max",
+  "hand": "Both",
+  "peak": 43.5,
+  "avg": 37.0,
+  "body": 70,
+  "note": "7 s",
+  "grip": 3
+ },
+ {
+  "at": 1790384400000,
+  "type": "repeaters",
+  "hand": "Both",
+  "peak": 25.4,
+  "avg": 22.0,
+  "body": 70,
+  "note": "18/18 reps 7/3 s, 74% in 20.0 kg to 25.0 kg",
+  "grip": 1
+ },
+ {
+  "at": 1790380860000,
+  "type": "max",
+  "hand": "R",
+  "peak": 28.6,
+  "avg": 24.9,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790380800000,
+  "type": "max",
+  "hand": "L",
+  "peak": 29.6,
+  "avg": 25.8,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790121660000,
+  "type": "max",
+  "hand": "R",
+  "peak": 27.3,
+  "avg": 23.8,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1790121600000,
+  "type": "max",
+  "hand": "L",
+  "peak": 28.7,
+  "avg": 25.0,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789866000000,
+  "type": "repeaters",
+  "hand": "Both",
+  "peak": 24.9,
+  "avg": 21.5,
+  "body": 70,
+  "note": "18/18 reps 7/3 s, 72% in 20.0 kg to 25.0 kg",
+  "grip": 1
+ },
+ {
+  "at": 1789862460000,
+  "type": "max",
+  "hand": "R",
+  "peak": 27.2,
+  "avg": 23.7,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789862400000,
+  "type": "max",
+  "hand": "L",
+  "peak": 28.2,
+  "avg": 24.5,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789603260000,
+  "type": "max",
+  "hand": "R",
+  "peak": 26.9,
+  "avg": 23.4,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789603200000,
+  "type": "max",
+  "hand": "L",
+  "peak": 27.8,
+  "avg": 24.2,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789351200000,
+  "type": "max",
+  "hand": "Both",
+  "peak": 41.0,
+  "avg": 34.9,
+  "body": 70,
+  "note": "7 s",
+  "grip": 3
+ },
+ {
+  "at": 1789347600000,
+  "type": "repeaters",
+  "hand": "Both",
+  "peak": 24.4,
+  "avg": 21.0,
+  "body": 70,
+  "note": "18/18 reps 7/3 s, 70% in 20.0 kg to 25.0 kg",
+  "grip": 1
+ },
+ {
+  "at": 1789344060000,
+  "type": "max",
+  "hand": "R",
+  "peak": 26.2,
+  "avg": 22.8,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789344000000,
+  "type": "max",
+  "hand": "L",
+  "peak": 27.9,
+  "avg": 24.3,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789084860000,
+  "type": "max",
+  "hand": "R",
+  "peak": 25.4,
+  "avg": 22.1,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1789084800000,
+  "type": "max",
+  "hand": "L",
+  "peak": 27.6,
+  "avg": 24.0,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1788829200000,
+  "type": "repeaters",
+  "hand": "Both",
+  "peak": 23.9,
+  "avg": 20.5,
+  "body": 70,
+  "note": "18/18 reps 7/3 s, 68% in 20.0 kg to 25.0 kg",
+  "grip": 1
+ },
+ {
+  "at": 1788825660000,
+  "type": "max",
+  "hand": "R",
+  "peak": 25.1,
+  "avg": 21.8,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ },
+ {
+  "at": 1788825600000,
+  "type": "max",
+  "hand": "L",
+  "peak": 26.8,
+  "avg": 23.3,
+  "body": 70,
+  "note": "7 s",
+  "grip": 1
+ }
+]

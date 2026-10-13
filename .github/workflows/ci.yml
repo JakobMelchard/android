@@ -1,0 +1,19 @@
+name: ci
+
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  ci:
+    uses: JakobMelchard/.github/.github/workflows/android.yml@e1ef2b10e7ee0c5426f78d63a4e9c6a0ce9b3fe9 # v1.6.0
+    with:
+      android-packages: platforms;android-35 build-tools;35.0.0
+      artifact-path: app/build/outputs/apk/debug/*.apk
+
+  hooks:
+    uses: JakobMelchard/.github/.github/workflows/hooks.yml@e1ef2b10e7ee0c5426f78d63a4e9c6a0ce9b3fe9 # v1.6.0

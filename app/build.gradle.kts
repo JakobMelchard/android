@@ -41,4 +41,6 @@ dependencies {
   implementation("androidx.compose.material:material-icons-core")
   implementation("androidx.activity:activity-compose:1.10.1")
   testImplementation("junit:junit:4.13.2")
+  // The Android stub of org.json throws on the JVM.
+  testImplementation("org.json:json:20250517")
 }

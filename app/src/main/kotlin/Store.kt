@@ -36,6 +36,54 @@ data class Plan(
   val hi: Float = 25f,
 )
 
+fun encodePlan(p: Plan) = listOf(p.work, p.rest, p.reps, p.sets, p.setRest, p.lo, p.hi).joinToString(",")
+
+fun decodePlan(s: String?): Plan =
+  runCatching {
+    val f = s!!.split(",")
+    Plan(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5].toFloat(), f[6].toFloat())
+  }.getOrDefault(Plan())
+
+fun encodeSessions(list: List<Session>): String {
+  val a = JSONArray()
+  list.forEach {
+    a.put(
+      JSONObject()
+        .put("at", it.at).put("type", it.type).put("hand", it.hand)
+        .put("peak", it.peak.toDouble()).put("avg", it.avg.toDouble())
+        .put("body", it.body.toDouble()).put("note", it.note).put("grip", it.grip),
+    )
+  }
+  return a.toString()
+}
+
+fun decodeSessions(s: String): List<Session> {
+  val a = JSONArray(s)
+  return List(a.length()) {
+    val o = a.getJSONObject(it)
+    Session(
+      o.getLong("at"), o.getString("type"), o.getString("hand"),
+      o.getDouble("peak").toFloat(), o.getDouble("avg").toFloat(),
+      o.getDouble("body").toFloat(), o.getString("note"), o.optLong("grip", 0),
+    )
+  }
+}
+
+fun encodeGrips(list: List<Grip>): String {
+  val a = JSONArray()
+  list.forEach { a.put(JSONObject().put("id", it.id).put("name", it.name)) }
+  return a.toString()
+}
+
+fun decodeGrips(s: String): List<Grip> {
+  val a = JSONArray(s)
+  return List(a.length()) { a.getJSONObject(it).let { o -> Grip(o.getLong("id"), o.getString("name")) } }
+}
+
+// Past every id a session still holds, so a new grip never inherits a deleted one's history.
+fun nextGripId(grips: List<Grip>, sessions: List<Session>) =
+  maxOf(grips.maxOfOrNull { it.id } ?: 0, sessions.maxOfOrNull { it.grip } ?: 0) + 1
+
 class Store(ctx: Context) {
   private val file = File(ctx.filesDir, "sessions.json")
   private val prefs = ctx.getSharedPreferences("pull", Context.MODE_PRIVATE)
@@ -58,38 +106,26 @@ class Store(ctx: Context) {
       prefs.edit().putFloat("body", v).apply()
     }
 
-  private var _plan by mutableStateOf(
-    prefs.getString("plan", null)?.split(",")?.let {
-      Plan(it[0].toInt(), it[1].toInt(), it[2].toInt(), it[3].toInt(), it[4].toInt(), it[5].toFloat(), it[6].toFloat())
-    } ?: Plan(),
-  )
+  private var _plan by mutableStateOf(decodePlan(prefs.getString("plan", null)))
   var plan: Plan
     get() = _plan
     set(p) {
       _plan = p
-      prefs.edit().putString("plan", listOf(p.work, p.rest, p.reps, p.sets, p.setRest, p.lo, p.hi).joinToString(",")).apply()
+      prefs.edit().putString("plan", encodePlan(p)).apply()
     }
 
   init {
-    val g = prefs.getString("grips", null)
+    val g = prefs.getString("grips", null)?.let { runCatching { decodeGrips(it) }.getOrNull() }
     if (g == null) {
       presets.forEachIndexed { i, n -> grips.add(Grip(i + 1L, n)) }
       saveGrips()
     } else {
-      val a = JSONArray(g)
-      for (i in 0 until a.length()) a.getJSONObject(i).let { grips.add(Grip(it.getLong("id"), it.getString("name"))) }
+      grips.addAll(g)
     }
     if (file.exists()) {
-      val a = JSONArray(file.readText())
-      for (i in 0 until a.length()) {
-        val o = a.getJSONObject(i)
-        sessions.add(
-          Session(
-            o.getLong("at"), o.getString("type"), o.getString("hand"),
-            o.getDouble("peak").toFloat(), o.getDouble("avg").toFloat(),
-            o.getDouble("body").toFloat(), o.getString("note"), o.optLong("grip", 0),
-          ),
-        )
+      runCatching { sessions.addAll(decodeSessions(file.readText())) }.onFailure {
+        // Keep the unreadable file for recovery instead of overwriting it on the next save.
+        file.renameTo(File(file.path + ".bad"))
       }
     }
   }
@@ -101,8 +137,7 @@ class Store(ctx: Context) {
     sessions.filter { it.type == "max" && it.grip == grip && it.hand == hand }.maxOfOrNull { it.peak }
 
   fun addGrip(name: String) {
-    // Past every id a session still holds, so a new grip never inherits a deleted one's history.
-    val g = Grip(maxOf(grips.maxOfOrNull { it.id } ?: 0, sessions.maxOfOrNull { it.grip } ?: 0) + 1, name)
+    val g = Grip(nextGripId(grips, sessions), name)
     grips.add(g)
     grip = g.id
     saveGrips()
@@ -116,9 +151,7 @@ class Store(ctx: Context) {
   }
 
   private fun saveGrips() {
-    val a = JSONArray()
-    grips.forEach { a.put(JSONObject().put("id", it.id).put("name", it.name)) }
-    prefs.edit().putString("grips", a.toString()).apply()
+    prefs.edit().putString("grips", encodeGrips(grips)).apply()
   }
 
   fun add(s: Session) {
@@ -131,16 +164,10 @@ class Store(ctx: Context) {
     save()
   }
 
+  // A kill mid-write must not leave a truncated sessions.json, so write aside and rename over it.
   private fun save() {
-    val a = JSONArray()
-    sessions.forEach {
-      a.put(
-        JSONObject()
-          .put("at", it.at).put("type", it.type).put("hand", it.hand)
-          .put("peak", it.peak.toDouble()).put("avg", it.avg.toDouble())
-          .put("body", it.body.toDouble()).put("note", it.note).put("grip", it.grip),
-      )
-    }
-    file.writeText(a.toString())
+    val tmp = File(file.path + ".tmp")
+    tmp.writeText(encodeSessions(sessions))
+    tmp.renameTo(file)
   }
 }

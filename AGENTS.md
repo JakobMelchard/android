@@ -19,8 +19,8 @@ calling `./gradlew` from a shell with the default JDK.
 
 - `app/src/main/java/io/lilfeelz/fz/MainActivity.kt` app list, fuzzy match,
   frecency, UI. One Activity, nothing else
-- `app/src/main/java/io/lilfeelz/fz/Tokens.kt` org design tokens
-- `app/src/test/` unit tests for `fuzzy`
+- `app/src/main/java/io/lilfeelz/fz/Tokens.kt` the org design tokens fz uses
+- `app/src/test/` unit tests for `fuzzy`, `rank` and `frecency`
 
 ## Rules
 
@@ -30,7 +30,7 @@ calling `./gradlew` from a shell with the default JDK.
 - Ranking is `fuzzy` score plus `ln(1 + frecency)`. Frecency is
   `launches / (1 + days since last launch)`, stored per `pkg/cls` in the
   `usage` SharedPreferences as `count|epochMs`.
-- `onResume` reloads the app list and clears the query. Pressing Home on the
+- `onResume` reloads the app list and clears the query. A failed launch reloads it too. Pressing Home on the
   launcher itself goes through `onPause`/`onResume` too, so there is no
   package-change receiver.
 - Back clears the query; it never leaves the launcher.

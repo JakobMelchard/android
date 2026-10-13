@@ -1,5 +1,6 @@
 package io.lilfeelz.fz
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -68,6 +69,27 @@ fun fuzzy(q: String, s: String): Double? {
   return score - t.length * 0.01
 }
 
+// stored as "count|epochMs"; anything malformed reads as never launched
+fun usage(stored: String?): Pair<Long, Long> {
+  val p = stored?.split("|")
+  val n = p?.getOrNull(0)?.toLongOrNull()
+  val t = p?.getOrNull(1)?.toLongOrNull()
+  return if (n == null || t == null) 0L to 0L else n to t
+}
+
+// launches / (1 + days since last launch)
+fun frecency(stored: String?, now: Long): Double {
+  val (n, t) = usage(stored)
+  return n / (1 + (now - t) / 86_400_000.0)
+}
+
+fun rank(query: String, apps: List<App>, frecencyOf: (App) -> Double): List<App> {
+  val f = apps.associateWith(frecencyOf)
+  return if (query.isBlank()) apps.sortedByDescending { f.getValue(it) }
+  else apps.mapNotNull { a -> fuzzy(query, a.label)?.let { a to it + ln(1 + f.getValue(a)) } }
+    .sortedByDescending { it.second }.map { it.first }
+}
+
 private val mono = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 18.sp, color = Tokens.fg)
 
 class MainActivity : ComponentActivity() {
@@ -88,28 +110,32 @@ class MainActivity : ComponentActivity() {
     super.onResume()
     query = ""
     resumes++
+    loadApps()
+  }
+
+  private fun loadApps() {
     val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
     apps = packageManager.queryIntentActivities(i, 0)
       .map { App(it.loadLabel(packageManager).toString(), it.activityInfo.packageName, it.activityInfo.name) }
       .filter { it.pkg != packageName }
   }
 
-  // launches / (1 + days since last launch)
-  private fun frecency(a: App): Double {
-    val (n, t) = prefs.getString(a.key, "0|0")!!.split("|").map { it.toLong() }
-    return n / (1 + (System.currentTimeMillis() - t) / 86_400_000.0)
-  }
-
   private fun launch(a: App) {
-    val n = prefs.getString(a.key, "0|0")!!.substringBefore("|").toLong()
+    try {
+      startActivity(Intent().setClassName(a.pkg, a.cls).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: ActivityNotFoundException) {
+      return loadApps()
+    } catch (_: SecurityException) {
+      return loadApps()
+    }
+    val (n, _) = usage(prefs.getString(a.key, null))
     prefs.edit().putString(a.key, "${n + 1}|${System.currentTimeMillis()}").apply()
-    startActivity(Intent().setClassName(a.pkg, a.cls).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
   }
 
-  private fun matches(): List<App> =
-    if (query.isBlank()) apps.sortedByDescending(::frecency)
-    else apps.mapNotNull { a -> fuzzy(query, a.label)?.let { a to it + ln(1 + frecency(a)) } }
-      .sortedByDescending { it.second }.map { it.first }
+  private fun matches(): List<App> {
+    val now = System.currentTimeMillis()
+    return rank(query, apps) { frecency(prefs.getString(it.key, null), now) }
+  }
 
   @Composable
   fun Launcher() {

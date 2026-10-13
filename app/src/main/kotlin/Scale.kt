@@ -1,0 +1,85 @@
+package io.jakobmelchard.pull
+
+import android.annotation.SuppressLint
+import android.bluetooth.BluetoothManager
+import android.bluetooth.le.ScanCallback
+import android.bluetooth.le.ScanFilter
+import android.bluetooth.le.ScanResult
+import android.bluetooth.le.ScanSettings
+import android.content.Context
+import android.os.SystemClock
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+
+const val COMPANY = 0x0100
+
+data class Reading(val kg: Float, val stable: Boolean, val t: Long)
+
+// WH-C06 (IF_B7) manufacturer data, company id already stripped by Android: hundredths of
+// the display unit as big-endian u16 at 10..11, byte 14 is stable (high nibble) and unit (low).
+fun decode(d: ByteArray, t: Long): Reading? {
+  if (d.size < 12) return null
+  val v = (((d[10].toInt() and 0xff) shl 8) or (d[11].toInt() and 0xff)) / 100f
+  val b = if (d.size > 14) d[14].toInt() and 0xff else 0x01
+  val kg = when (b and 0x0f) {
+    0, 2 -> v * 0.45359237f // lb
+    3 -> v * 6.35029318f // st
+    4 -> v * 0.5f // jin
+    else -> v
+  }
+  return if (kg > 300f) null else Reading(kg, b shr 4 != 0, t)
+}
+
+class Scale(private val ctx: Context) {
+  val trace = mutableStateListOf<Reading>()
+  var status by mutableStateOf("Not scanning")
+  var scanning by mutableStateOf(false)
+  var tare by mutableStateOf(0f)
+  private var addr: String? = null
+
+  private val cb = object : ScanCallback() {
+    override fun onScanResult(type: Int, r: ScanResult) {
+      val d = r.scanRecord?.getManufacturerSpecificData(COMPANY) ?: return
+      // Lock onto the first scale seen so a second one nearby cannot mix in.
+      if (addr == null) addr = r.device.address
+      if (r.device.address != addr) return
+      val x = decode(d, SystemClock.elapsedRealtime()) ?: return
+      trace.add(x.copy(kg = x.kg - tare))
+      if (trace.size > 20_000) trace.removeRange(0, 5_000)
+    }
+
+    override fun onScanFailed(code: Int) {
+      scanning = false
+      status = "Scan failed ($code)"
+    }
+  }
+
+  @SuppressLint("MissingPermission")
+  fun start() {
+    if (scanning) return
+    val s = ctx.getSystemService(BluetoothManager::class.java).adapter?.bluetoothLeScanner
+    if (s == null) {
+      status = "Bluetooth is off"
+      return
+    }
+    val f = ScanFilter.Builder().setManufacturerData(COMPANY, byteArrayOf()).build()
+    val set = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+    s.startScan(listOf(f), set, cb)
+    scanning = true
+    status = "Searching"
+  }
+
+  @SuppressLint("MissingPermission")
+  fun stop() {
+    if (!scanning) return
+    ctx.getSystemService(BluetoothManager::class.java).adapter?.bluetoothLeScanner?.stopScan(cb)
+    scanning = false
+    status = "Not scanning"
+  }
+
+  fun zero() {
+    trace.lastOrNull()?.let { tare += it.kg }
+  }
+}

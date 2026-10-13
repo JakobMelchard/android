@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/JakobMelchard/pull/compare/v0.1.1...v0.1.2) (2026-10-13)
+
+
+### Bug Fixes
+
+* sign release APKs with the keystore's own alias ([#15](https://github.com/JakobMelchard/pull/issues/15)) ([1d18fda](https://github.com/JakobMelchard/pull/commit/1d18fda54742d71d20ac0ef3d07901c38a445878))
+
 ## [0.1.1](https://github.com/JakobMelchard/pull/compare/v0.1.0...v0.1.1) (2026-10-13)
 
 

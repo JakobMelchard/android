@@ -90,6 +90,18 @@ class Store(ctx: Context) {
   val sessions = mutableStateListOf<Session>()
   val grips = mutableStateListOf<Grip>()
 
+  // Start times of the running sessions, kept here so switching tabs does not lose them.
+  var liveStart by mutableStateOf<Long?>(null)
+  var maxStart by mutableStateOf<Long?>(null)
+  var repStart by mutableStateOf<Long?>(null)
+
+  // Scanning stops with the app, so a running session would be saved with missing samples.
+  fun cancelSessions() {
+    liveStart = null
+    maxStart = null
+    repStart = null
+  }
+
   private var _grip by mutableStateOf(prefs.getLong("grip", 1))
   var grip: Long
     get() = _grip

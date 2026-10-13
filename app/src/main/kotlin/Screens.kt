@@ -108,7 +108,7 @@ fun GripPicker(store: Store) {
 fun Live(scale: Scale, store: Store) {
   val now = rememberNow()
   val p = LocalPalette.current
-  var start by remember { mutableStateOf<Long?>(null) }
+  var start by store::liveStart
   val s = start
   val from = s ?: (now - 10_000)
   val pts = scale.trace.filter { it.t >= from }
@@ -142,7 +142,7 @@ fun Max(scale: Scale, store: Store) {
   val p = LocalPalette.current
   var hand by rememberSaveable { mutableStateOf("L") }
   var dur by rememberSaveable { mutableFloatStateOf(7f) }
-  var t0 by remember { mutableStateOf<Long?>(null) }
+  var t0 by store::maxStart
   // The finished pull and the grip's best before it.
   var result by remember { mutableStateOf<Pair<Session, Float?>?>(null) }
   val s = t0
@@ -262,7 +262,7 @@ fun tally(ph: List<Phase>, starts: List<Long>, trace: List<Reading>, now: Long, 
 fun Repeaters(scale: Scale, store: Store) {
   val now = rememberNow()
   val pal = LocalPalette.current
-  var t0 by remember { mutableStateOf<Long?>(null) }
+  var t0 by store::repStart
   var done by remember { mutableStateOf<Session?>(null) }
   val p = store.plan
   val s = t0

@@ -67,6 +67,7 @@ import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
   private lateinit var scale: Scale
+  private lateinit var store: Store
   private var demo = false
 
   private val perms =
@@ -88,7 +89,7 @@ class MainActivity : ComponentActivity() {
     // Scanning pauses with the screen off, and a session should never lose samples.
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     scale = Scale(applicationContext)
-    val store = Store(applicationContext)
+    store = Store(applicationContext)
     // Debug builds started with --ez demo true draw synthetic pulls instead of scanning (scripts/screenshots.sh).
     demo = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 && intent.getBooleanExtra("demo", false)
     if (demo) lifecycleScope.launch { scale.demo() } else if (!granted()) ask.launch(perms)
@@ -102,7 +103,10 @@ class MainActivity : ComponentActivity() {
 
   override fun onStop() {
     super.onStop()
-    if (!demo) scale.stop()
+    if (!demo) {
+      scale.stop()
+      store.cancelSessions()
+    }
   }
 }
 

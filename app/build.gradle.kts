@@ -1,12 +1,11 @@
 plugins {
   id("com.android.application")
-  id("org.jetbrains.kotlin.android")
   id("org.jetbrains.kotlin.plugin.compose")
 }
 
 android {
   namespace = "io.lilfeelz.fz"
-  compileSdk = 35
+  compileSdk = 36
   defaultConfig {
     applicationId = "io.lilfeelz.fz"
     minSdk = 29
@@ -29,13 +28,12 @@ android {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
   }
-  kotlinOptions { jvmTarget = "17" }
   buildFeatures { compose = true }
 }
 
 dependencies {
-  implementation(platform("androidx.compose:compose-bom:2025.02.00"))
+  implementation(platform("androidx.compose:compose-bom:2025.12.01"))
   implementation("androidx.compose.foundation:foundation")
-  implementation("androidx.activity:activity-compose:1.10.0")
+  implementation("androidx.activity:activity-compose:1.13.0")
   testImplementation("junit:junit:4.13.2")
 }

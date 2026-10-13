@@ -3,6 +3,9 @@ package io.jakobmelchard.pull
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.selection.selectable
+import jakobmelchard.tokens.DarkTokens
+import jakobmelchard.tokens.LightTokens
+import jakobmelchard.tokens.RadiusTokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,7 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// Org design tokens from JakobMelchard/web tokens/tokens.json (v0.1.0, 34704ce):
+// Org design tokens (tokens/Tokens.kt, vendored from JakobMelchard/web):
 // Dracula on black, dark is the brand, system monospace, line borders instead of shadows.
 data class Palette(
   val bg: Color,
@@ -56,33 +59,9 @@ data class Palette(
   val red: Color,
 )
 
-val Dark = Palette(
-  bg = Color(0xFF0B0D10),
-  card = Color(0xFF15171F),
-  line = Color(0x406272A4),
-  fg = Color(0xFFF8F8F2),
-  muted = Color(0xFF6272A4),
-  accent = Color(0xFF8BE9FD),
-  pink = Color(0xFFFF79C6),
-  purple = Color(0xFFBD93F9),
-  green = Color(0xFF50FA7B),
-  orange = Color(0xFFFFB86C),
-  red = Color(0xFFFF5555),
-)
+val Dark = DarkTokens.run { Palette(bg, card, line, fg, muted, accent, pink, purple, green, orange, red) }
 
-val Light = Palette(
-  bg = Color(0xFFFFFFFF),
-  card = Color(0xFFF2F2F5),
-  line = Color(0x1A000000),
-  fg = Color(0xFF1A1A2E),
-  muted = Color(0xFF6B7280),
-  accent = Color(0xFF2563EB),
-  pink = Color(0xFFE11D48),
-  purple = Color(0xFF7C3AED),
-  green = Color(0xFF059669),
-  orange = Color(0xFFD97706),
-  red = Color(0xFFDC2626),
-)
+val Light = LightTokens.run { Palette(bg, card, line, fg, muted, accent, pink, purple, green, orange, red) }
 
 val LocalPalette = staticCompositionLocalOf { Dark }
 
@@ -129,7 +108,7 @@ fun PullTheme(content: @Composable () -> Unit) {
     labelMedium = mono(15),
     labelSmall = mono(14),
   )
-  val shapes = Shapes(small = RoundedCornerShape(3.dp), medium = RoundedCornerShape(8.dp), large = RoundedCornerShape(10.dp))
+  val shapes = Shapes(small = RoundedCornerShape(RadiusTokens.radiusSm.dp), medium = RoundedCornerShape(RadiusTokens.radiusMd.dp), large = RoundedCornerShape(RadiusTokens.radiusLg.dp))
   CompositionLocalProvider(LocalPalette provides p) {
     MaterialTheme(colorScheme = colors, typography = type, shapes = shapes, content = content)
   }
@@ -139,7 +118,7 @@ fun PullTheme(content: @Composable () -> Unit) {
 @Composable
 fun Panel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit) {
   val p = LocalPalette.current
-  val shape = RoundedCornerShape(8.dp)
+  val shape = RoundedCornerShape(RadiusTokens.radiusMd.dp)
   Column(
     modifier.fillMaxWidth().background(p.card, shape).border(1.dp, p.line, shape).padding(12.dp),
     verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -165,7 +144,7 @@ fun Action(text: String, color: Color = LocalPalette.current.accent, onClick: ()
   Button(
     onClick,
     Modifier.fillMaxWidth().height(60.dp),
-    shape = RoundedCornerShape(10.dp),
+    shape = RoundedCornerShape(RadiusTokens.radiusLg.dp),
     colors = ButtonDefaults.buttonColors(containerColor = color, contentColor = LocalPalette.current.bg),
   ) { Text(text, style = MaterialTheme.typography.titleMedium) }
 
@@ -180,13 +159,13 @@ fun RowScope.Stat(label: String, value: String, color: Color = LocalPalette.curr
 fun Seg(options: List<String>, selected: String, onSelect: (String) -> Unit) {
   val p = LocalPalette.current
   Row(
-    Modifier.fillMaxWidth().border(1.dp, p.line, RoundedCornerShape(10.dp)).padding(4.dp),
+    Modifier.fillMaxWidth().border(1.dp, p.line, RoundedCornerShape(RadiusTokens.radiusLg.dp)).padding(4.dp),
     horizontalArrangement = Arrangement.spacedBy(4.dp),
   ) {
     options.forEach { o ->
       val on = o == selected
       Box(
-        Modifier.weight(1f).height(48.dp).background(if (on) p.accent else Color.Transparent, RoundedCornerShape(8.dp))
+        Modifier.weight(1f).height(48.dp).background(if (on) p.accent else Color.Transparent, RoundedCornerShape(RadiusTokens.radiusMd.dp))
           .selectable(on, role = Role.RadioButton) { onSelect(o) },
         contentAlignment = Alignment.Center,
       ) { Text(o, color = if (on) p.bg else p.muted, style = MaterialTheme.typography.labelLarge) }
@@ -197,7 +176,7 @@ fun Seg(options: List<String>, selected: String, onSelect: (String) -> Unit) {
 @Composable
 fun Pill(text: String, color: Color, enabled: Boolean = true, onClick: () -> Unit) =
   Box(
-    Modifier.heightIn(min = 48.dp).border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(999.dp))
+    Modifier.heightIn(min = 48.dp).border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(RadiusTokens.radiusPill.dp))
       .clickable(enabled, role = Role.Button, onClick = onClick).padding(horizontal = 16.dp),
     contentAlignment = Alignment.Center,
   ) { Text(text, color = color, style = MaterialTheme.typography.labelLarge) }

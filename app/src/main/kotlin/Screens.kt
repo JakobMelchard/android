@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.delay
+import jakobmelchard.tokens.RadiusTokens
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -82,7 +83,7 @@ fun GripPicker(store: Store) {
   val p = LocalPalette.current
   Box {
     Row(
-      Modifier.border(1.dp, p.purple.copy(alpha = 0.5f), RoundedCornerShape(999.dp)).clickable { open = true }
+      Modifier.border(1.dp, p.purple.copy(alpha = 0.5f), RoundedCornerShape(RadiusTokens.radiusPill.dp)).clickable { open = true }
         .padding(horizontal = 16.dp, vertical = 10.dp),
       verticalAlignment = Alignment.CenterVertically,
     ) {

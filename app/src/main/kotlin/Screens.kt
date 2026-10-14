@@ -35,11 +35,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -140,8 +138,8 @@ fun Live(scale: Scale, store: Store) {
 fun Max(scale: Scale, store: Store) {
   val now = rememberNow()
   val p = LocalPalette.current
-  var hand by rememberSaveable { mutableStateOf("L") }
-  var dur by rememberSaveable { mutableFloatStateOf(7f) }
+  var hand by store::maxHand
+  var dur by store::maxDur
   var t0 by store::maxStart
   // The finished pull and the grip's best before it.
   var result by remember { mutableStateOf<Pair<Session, Float?>?>(null) }

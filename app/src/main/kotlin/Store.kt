@@ -95,6 +95,10 @@ class Store(ctx: Context) {
   var maxStart by mutableStateOf<Long?>(null)
   var repStart by mutableStateOf<Long?>(null)
 
+  // The max test's hand and pull length live beside maxStart: a resumed session must use what it started with.
+  var maxHand by mutableStateOf("L")
+  var maxDur by mutableFloatStateOf(7f)
+
   // Scanning stops with the app, so a running session would be saved with missing samples.
   fun cancelSessions() {
     liveStart = null

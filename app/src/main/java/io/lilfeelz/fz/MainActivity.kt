@@ -1,7 +1,10 @@
 package io.lilfeelz.fz
 
 import android.content.ActivityNotFoundException
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -45,7 +48,14 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import kotlin.math.ln
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class App(val label: String, val pkg: String, val cls: String) {
   val key get() = "$pkg/$cls"
@@ -97,6 +107,12 @@ class MainActivity : ComponentActivity() {
   private var apps by mutableStateOf(emptyList<App>())
   private var query by mutableStateOf("")
   private var resumes by mutableIntStateOf(0)
+  private var load: Job? = null
+
+  // The list is loaded once here and again when a package changes, not on every Home press.
+  private val changed = object : BroadcastReceiver() {
+    override fun onReceive(c: Context, i: Intent) = loadApps()
+  }
 
   override fun onCreate(s: Bundle?) {
     super.onCreate(s)
@@ -104,20 +120,40 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge(bars, bars)
     onBackPressedDispatcher.addCallback(this) { query = "" }
     setContent { Launcher() }
+    val f = IntentFilter().apply {
+      for (a in listOf(Intent.ACTION_PACKAGE_ADDED, Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REPLACED)) addAction(a)
+      addDataScheme("package")
+    }
+    ContextCompat.registerReceiver(this, changed, f, ContextCompat.RECEIVER_NOT_EXPORTED)
+    loadApps()
+  }
+
+  override fun onDestroy() {
+    unregisterReceiver(changed)
+    super.onDestroy()
   }
 
   override fun onResume() {
     super.onResume()
     query = ""
     resumes++
-    loadApps()
   }
 
+  // queryIntentActivities plus one loadLabel IPC per activity: off the main thread, the list swaps in when
+  // done. Usage entries of apps no longer installed are dropped on the way. One load at a time: a burst of
+  // package broadcasts cancels the load in flight, so an older list never lands after a newer one.
   private fun loadApps() {
-    val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-    apps = packageManager.queryIntentActivities(i, 0)
-      .map { App(it.loadLabel(packageManager).toString(), it.activityInfo.packageName, it.activityInfo.name) }
-      .filter { it.pkg != packageName }
+    load?.cancel()
+    load = lifecycleScope.launch(Dispatchers.IO) {
+      val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+      val list = packageManager.queryIntentActivities(i, 0)
+        .map { App(it.loadLabel(packageManager).toString(), it.activityInfo.packageName, it.activityInfo.name) }
+        .filter { it.pkg != packageName }
+      ensureActive()
+      val keys = list.map { it.key }.toSet()
+      prefs.edit().apply { prefs.all.keys.filter { it !in keys }.forEach(::remove) }.apply()
+      withContext(Dispatchers.Main) { apps = list }
+    }
   }
 
   private fun launch(a: App) {

@@ -50,4 +50,9 @@ class FuzzyTest {
     assertEquals(2.0, frecency("4|0", day), 1e-9)
     assertEquals(3L to 7L, usage("3|7"))
   }
+
+  @Test fun launchTimeInTheFutureCountsAsNow() {
+    val day = 86_400_000L
+    for (ahead in listOf(1L, day, 3 * day)) assertEquals(4.0, frecency("4|${ahead}", 0), 1e-9)
+  }
 }

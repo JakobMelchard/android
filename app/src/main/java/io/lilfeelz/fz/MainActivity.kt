@@ -89,7 +89,8 @@ fun usage(stored: String?): Pair<Long, Long> {
 
 fun frecency(stored: String?, now: Long): Double {
   val (n, t) = usage(stored)
-  return n / (1 + (now - t) / 86_400_000.0)
+  // a clock set back after a launch makes now - t negative
+  return n / (1 + maxOf(0L, now - t) / 86_400_000.0)
 }
 
 fun rank(query: String, apps: List<App>, frecencyOf: (App) -> Double): List<App> {

@@ -48,4 +48,12 @@ class StoreCodecTest {
     assertEquals(Plan(3600, 3600, 50, 20, 3600, 20f, 25f), decodePlan(encodePlan(big)))
     assertEquals(Plan(1, 0, 1, 1, 0, 20f, 25f), Plan(0, -5, 0, 0, -1, 20f, 25f).capped())
   }
+
+  @Test
+  fun targetBandIsFiniteNonNegativeAndOrdered() {
+    assertEquals(Plan(lo = 10f, hi = 30f), Plan(lo = 30f, hi = 10f).capped())
+    assertEquals(Plan(lo = 0f, hi = 5f), Plan(lo = -3f, hi = 5f).capped())
+    assertEquals(Plan(lo = 0f, hi = 0f), Plan(lo = Float.NaN, hi = Float.POSITIVE_INFINITY).capped())
+    assertEquals(Plan(lo = 10f, hi = 30f), decodePlan("7,3,6,3,180,30.0,10.0"))
+  }
 }

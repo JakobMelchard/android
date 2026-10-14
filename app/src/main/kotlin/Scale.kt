@@ -34,20 +34,29 @@ fun decode(d: ByteArray, t: Long): Reading? {
   return if (kg > 300f) null else Reading(kg, b shr 4 != 0, t)
 }
 
+// Locks onto the first device that sends a valid frame so a second scale nearby cannot mix in.
+class Lock {
+  var addr: String? = null
+
+  fun accept(address: String, d: ByteArray, t: Long): Reading? {
+    if (addr != null && address != addr) return null
+    val x = decode(d, t) ?: return null
+    addr = address
+    return x
+  }
+}
+
 class Scale(private val ctx: Context) {
   val trace = mutableStateListOf<Reading>()
   var status by mutableStateOf("Not scanning")
   var scanning by mutableStateOf(false)
   var tare by mutableStateOf(0f)
-  private var addr: String? = null
+  private val lock = Lock()
 
   private val cb = object : ScanCallback() {
     override fun onScanResult(type: Int, r: ScanResult) {
       val d = r.scanRecord?.getManufacturerSpecificData(COMPANY) ?: return
-      if (addr != null && r.device.address != addr) return
-      val x = decode(d, SystemClock.elapsedRealtime()) ?: return
-      // Lock onto the first device that sends a valid frame so a second scale nearby cannot mix in.
-      addr = r.device.address
+      val x = lock.accept(r.device.address, d, SystemClock.elapsedRealtime()) ?: return
       trace.add(x.copy(kg = x.kg - tare))
       if (trace.size > 20_000) trace.removeRange(0, 5_000)
     }
@@ -68,7 +77,7 @@ class Scale(private val ctx: Context) {
     }
     val f = ScanFilter.Builder().setManufacturerData(COMPANY, byteArrayOf()).build()
     val set = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
-    addr = null
+    lock.addr = null
     s.startScan(listOf(f), set, cb)
     scanning = true
     status = "Searching"
@@ -79,7 +88,7 @@ class Scale(private val ctx: Context) {
     if (!scanning) return
     ctx.getSystemService(BluetoothManager::class.java).adapter?.bluetoothLeScanner?.stopScan(cb)
     scanning = false
-    addr = null
+    lock.addr = null
     status = "Not scanning"
   }
 

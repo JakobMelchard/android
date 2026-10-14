@@ -1,6 +1,6 @@
 package io.jakobmelchard.pull
 
-import android.content.Context
+import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -40,10 +40,14 @@ data class Plan(
   val hi: Float = 25f,
 ) {
   // schedule() builds one object per pull and rest, so unbounded reps or sets would exhaust memory.
-  fun capped() = copy(
-    work = work.coerceIn(1, 3600), rest = rest.coerceIn(0, 3600), reps = reps.coerceIn(1, 50),
-    sets = sets.coerceIn(1, 20), setRest = setRest.coerceIn(0, 3600),
-  )
+  fun capped(): Plan {
+    fun nn(v: Float) = if (v.isFinite()) v.coerceAtLeast(0f) else 0f
+    return copy(
+      work = work.coerceIn(1, 3600), rest = rest.coerceIn(0, 3600), reps = reps.coerceIn(1, 50),
+      sets = sets.coerceIn(1, 20), setRest = setRest.coerceIn(0, 3600),
+      lo = minOf(nn(lo), nn(hi)), hi = maxOf(nn(lo), nn(hi)),
+    )
+  }
 }
 
 fun encodePlan(p: Plan) = listOf(p.work, p.rest, p.reps, p.sets, p.setRest, p.lo, p.hi).joinToString(",")
@@ -94,9 +98,28 @@ fun decodeGrips(s: String): List<Grip> {
 fun nextGripId(grips: List<Grip>, sessions: List<Session>) =
   maxOf(grips.maxOfOrNull { it.id } ?: 0, sessions.maxOfOrNull { it.grip } ?: 0) + 1
 
-class Store(ctx: Context) {
-  private val file = File(ctx.filesDir, "sessions.json")
-  private val prefs = ctx.getSharedPreferences("pull", Context.MODE_PRIVATE)
+// Values are Long, Float or String.
+interface Kv {
+  operator fun get(k: String): Any?
+  operator fun set(k: String, v: Any)
+}
+
+class PrefsKv(private val p: SharedPreferences) : Kv {
+  override fun get(k: String) = p.all[k]
+
+  override fun set(k: String, v: Any) {
+    val e = p.edit()
+    when (v) {
+      is Long -> e.putLong(k, v)
+      is Float -> e.putFloat(k, v)
+      else -> e.putString(k, v as String)
+    }
+    e.apply()
+  }
+}
+
+class Store(dir: File, private val kv: Kv) {
+  private val file = File(dir, "sessions.json")
   val sessions = mutableStateListOf<Session>()
   val grips = mutableStateListOf<Grip>()
 
@@ -118,33 +141,36 @@ class Store(ctx: Context) {
     repStart = null
   }
 
-  private var _grip by mutableStateOf(prefs.getLong("grip", 1))
+  private var _grip by mutableStateOf(kv["grip"] as? Long ?: 1L)
   var grip: Long
     get() = _grip
     set(v) {
       _grip = v
-      prefs.edit().putLong("grip", v).apply()
+      kv["grip"] = v
     }
 
-  private var _body by mutableFloatStateOf(prefs.getFloat("body", 70f))
+  private var _body by mutableFloatStateOf(kv["body"] as? Float ?: 70f)
   var body: Float
     get() = _body
     set(v) {
       _body = v
-      prefs.edit().putFloat("body", v).apply()
+      kv["body"] = v
     }
 
-  private var _plan by mutableStateOf(decodePlan(prefs.getString("plan", null)))
+  private var _plan by mutableStateOf(decodePlan(kv["plan"] as? String))
   var plan: Plan
     get() = _plan
     set(p) {
       _plan = p.capped()
-      prefs.edit().putString("plan", encodePlan(_plan)).apply()
+      kv["plan"] = encodePlan(_plan)
     }
 
   init {
-    val g = prefs.getString("grips", null)?.let { runCatching { decodeGrips(it) }.getOrNull() }
+    val raw = kv["grips"] as? String
+    val g = raw?.let { runCatching { decodeGrips(it) }.getOrNull() }
     if (g == null) {
+      // Keep the unreadable grips for recovery instead of overwriting them with the presets.
+      if (raw != null) kv["grips.bad"] = raw
       presets.forEachIndexed { i, n -> grips.add(Grip(i + 1L, n)) }
       saveGrips()
     } else {
@@ -179,7 +205,7 @@ class Store(ctx: Context) {
   }
 
   private fun saveGrips() {
-    prefs.edit().putString("grips", encodeGrips(grips)).apply()
+    kv["grips"] = encodeGrips(grips)
   }
 
   fun add(s: Session) {

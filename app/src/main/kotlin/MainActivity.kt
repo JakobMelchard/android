@@ -88,7 +88,7 @@ class MainActivity : ComponentActivity() {
     // Scanning pauses with the screen off, and a session should never lose samples.
     window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     scale = Scale(applicationContext)
-    store = Store(applicationContext)
+    store = Store(filesDir, PrefsKv(getSharedPreferences("pull", MODE_PRIVATE)))
     // Debug builds started with --ez demo true draw synthetic pulls instead of scanning (scripts/screenshots.sh).
     demo = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 && intent.getBooleanExtra("demo", false)
     if (demo) lifecycleScope.launch { scale.demo() } else if (!granted()) ask.launch(perms)

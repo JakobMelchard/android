@@ -223,18 +223,29 @@ fun Max(scale: Scale, store: Store) {
     if (store.maxStart != s) return@LaunchedEffect
     beep()
     delay(end - SystemClock.elapsedRealtime())
-    if (store.maxStart != s) return@LaunchedEffect
-    beep(400)
-    val xs = scale.trace.filter { it.t in s..end }
     val prev = store.best(store.grip, hand)
-    val r = Session(
-      System.currentTimeMillis(), "max", hand, xs.maxOfOrNull { it.kg } ?: 0f, avgLoaded(xs), store.body, secs(end - s), store.grip,
-    )
-    if (xs.isNotEmpty()) store.add(r)
+    val r = maxSession(s, end, store.maxStart, scale.trace, hand, store.body, store.grip, System.currentTimeMillis()) ?: return@LaunchedEffect
+    beep(400)
+    if (scale.trace.any { it.t in s..end }) store.add(r)
     result = r to prev
     t0 = null
   }
 }
+
+// The finished max pull, or null when onStop cancelled it (store.maxStart no longer s).
+fun maxSession(s: Long, end: Long, running: Long?, trace: List<Reading>, hand: String, body: Float, grip: Long, at: Long): Session? {
+  if (running != s) return null
+  val xs = trace.filter { it.t in s..end }
+  return Session(at, "max", hand, xs.maxOfOrNull { it.kg } ?: 0f, avgLoaded(xs), body, secs(end - s), grip)
+}
+
+// The finished repeaters session, or null when it was cancelled or took no samples.
+fun repSession(s: Long, running: Long?, t: Tally, pulls: Int, p: Plan, body: Float, grip: Long, at: Long): Session? =
+  if (running != s || t.xs.isEmpty()) null
+  else Session(
+    at, "repeaters", "Both", t.xs.maxOf { it.kg }, avgLoaded(t.xs), body,
+    "${t.reps}/$pulls reps ${p.work}/${p.rest} s, ${t.inZone}% in ${kg(p.lo)} to ${kg(p.hi)}", grip,
+  )
 
 data class Phase(val name: String, val ms: Long, val set: Int, val rep: Int)
 
@@ -323,11 +334,9 @@ fun Repeaters(scale: Scale, store: Store) {
   val inZone = tally(ph, starts, scale.trace, now, zone).inZone
   val finish = {
     val t = tally(ph, starts, scale.trace, SystemClock.elapsedRealtime(), zone)
-    if (t.xs.isNotEmpty()) {
-      done = Session(
-        System.currentTimeMillis(), "repeaters", "Both", t.xs.maxOf { it.kg }, avgLoaded(t.xs), store.body,
-        "${t.reps}/${ph.count { it.name == "Pull" }} reps ${p.work}/${p.rest} s, ${t.inZone}% in ${kg(p.lo)} to ${kg(p.hi)}", store.grip,
-      ).also(store::add)
+    repSession(s, store.repStart, t, ph.count { it.name == "Pull" }, p, store.body, store.grip, System.currentTimeMillis())?.let {
+      done = it
+      store.add(it)
     }
     t0 = null
   }

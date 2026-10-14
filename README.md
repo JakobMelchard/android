@@ -12,6 +12,8 @@ Android force trainer for the WH-C06 Bluetooth crane scale, a cheap stand-in for
   </tr>
 </table>
 
+## Build
+
 ```sh
 brew install prek && prek install
 ./gradlew testDebugUnitTest assembleDebug
@@ -19,7 +21,23 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 ANDROID_SERIAL=emulator-5554 scripts/screenshots.sh   # regenerates docs/screenshots, emulator only
 ```
 
+## Install
+
 Releases carry a signed `pull-<version>.apk`; add the repo to [Obtainium](https://github.com/ImranR98/Obtainium) (with a GitHub token, the repo is private) for updates.
+
+## Use
+
+Switch the scale on, open the app and allow Bluetooth and location; it locks onto the first WH-C06 it hears. Press Tare with nothing hanging.
+
+| Tab | What it does |
+|---|---|
+| Live | force, peak and average over the last 10 s; Record saves a session |
+| Max | countdown, timed max pull per grip and hand, high score and bodyweight percentage |
+| Repeat | work/rest repeaters with sets, a target band and time in target |
+| Grips | add and delete grips, best max per hand |
+| History | every session and the max-pull trend for the current grip |
+
+## Layout
 
 | Path | Contents |
 |---|---|

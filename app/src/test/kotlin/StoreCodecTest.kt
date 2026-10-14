@@ -40,4 +40,12 @@ class StoreCodecTest {
     assertEquals(4L, nextGripId(grips, listOf(s.copy(grip = 3))))
     assertEquals(1L, nextGripId(emptyList(), emptyList()))
   }
+
+  @Test
+  fun planIsCapped() {
+    val big = Plan(1_000_000, 1_000_000, 1_000_000, 1_000_000, 1_000_000, 20f, 25f)
+    assertEquals(Plan(3600, 3600, 50, 20, 3600, 20f, 25f), big.capped())
+    assertEquals(Plan(3600, 3600, 50, 20, 3600, 20f, 25f), decodePlan(encodePlan(big)))
+    assertEquals(Plan(1, 0, 1, 1, 0, 20f, 25f), Plan(0, -5, 0, 0, -1, 20f, 25f).capped())
+  }
 }

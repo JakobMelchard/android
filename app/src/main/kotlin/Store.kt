@@ -34,14 +34,20 @@ data class Plan(
   val setRest: Int = 180,
   val lo: Float = 20f,
   val hi: Float = 25f,
-)
+) {
+  // schedule() builds one object per pull and rest, so unbounded reps or sets would exhaust memory.
+  fun capped() = copy(
+    work = work.coerceIn(1, 3600), rest = rest.coerceIn(0, 3600), reps = reps.coerceIn(1, 50),
+    sets = sets.coerceIn(1, 20), setRest = setRest.coerceIn(0, 3600),
+  )
+}
 
 fun encodePlan(p: Plan) = listOf(p.work, p.rest, p.reps, p.sets, p.setRest, p.lo, p.hi).joinToString(",")
 
 fun decodePlan(s: String?): Plan =
   runCatching {
     val f = s!!.split(",")
-    Plan(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5].toFloat(), f[6].toFloat())
+    Plan(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5].toFloat(), f[6].toFloat()).capped()
   }.getOrDefault(Plan())
 
 fun encodeSessions(list: List<Session>): String {
@@ -126,8 +132,8 @@ class Store(ctx: Context) {
   var plan: Plan
     get() = _plan
     set(p) {
-      _plan = p
-      prefs.edit().putString("plan", encodePlan(p)).apply()
+      _plan = p.capped()
+      prefs.edit().putString("plan", encodePlan(_plan)).apply()
     }
 
   init {

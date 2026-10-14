@@ -9,6 +9,10 @@ import androidx.compose.runtime.setValue
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption.ATOMIC_MOVE
+import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 
 // type is live, max or repeaters; hand is L, R or Both; grip 0 means none.
 data class Session(
@@ -101,6 +105,8 @@ class Store(ctx: Context) {
   var maxStart by mutableStateOf<Long?>(null)
   var repStart by mutableStateOf<Long?>(null)
 
+  var saveError by mutableStateOf<String?>(null)
+
   // The max test's hand and pull length live beside maxStart: a resumed session must use what it started with.
   var maxHand by mutableStateOf("L")
   var maxDur by mutableFloatStateOf(7f)
@@ -189,7 +195,12 @@ class Store(ctx: Context) {
   // A kill mid-write must not leave a truncated sessions.json, so write aside and rename over it.
   private fun save() {
     val tmp = File(file.path + ".tmp")
-    tmp.writeText(encodeSessions(sessions))
-    tmp.renameTo(file)
+    saveError = try {
+      tmp.writeText(encodeSessions(sessions))
+      Files.move(tmp.toPath(), file.toPath(), ATOMIC_MOVE, REPLACE_EXISTING)
+      null
+    } catch (e: IOException) {
+      "Could not save sessions"
+    }
   }
 }

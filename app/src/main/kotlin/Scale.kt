@@ -44,10 +44,10 @@ class Scale(private val ctx: Context) {
   private val cb = object : ScanCallback() {
     override fun onScanResult(type: Int, r: ScanResult) {
       val d = r.scanRecord?.getManufacturerSpecificData(COMPANY) ?: return
-      // Lock onto the first scale seen so a second one nearby cannot mix in.
-      if (addr == null) addr = r.device.address
-      if (r.device.address != addr) return
+      if (addr != null && r.device.address != addr) return
       val x = decode(d, SystemClock.elapsedRealtime()) ?: return
+      // Lock onto the first device that sends a valid frame so a second scale nearby cannot mix in.
+      addr = r.device.address
       trace.add(x.copy(kg = x.kg - tare))
       if (trace.size > 20_000) trace.removeRange(0, 5_000)
     }
@@ -68,6 +68,7 @@ class Scale(private val ctx: Context) {
     }
     val f = ScanFilter.Builder().setManufacturerData(COMPANY, byteArrayOf()).build()
     val set = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+    addr = null
     s.startScan(listOf(f), set, cb)
     scanning = true
     status = "Searching"
@@ -78,6 +79,7 @@ class Scale(private val ctx: Context) {
     if (!scanning) return
     ctx.getSystemService(BluetoothManager::class.java).adapter?.bluetoothLeScanner?.stopScan(cb)
     scanning = false
+    addr = null
     status = "Not scanning"
   }
 

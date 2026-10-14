@@ -122,7 +122,7 @@ fun App(scale: Scale, store: Store, connect: () -> Unit) {
   val p = LocalPalette.current
   Scaffold(
     containerColor = p.bg,
-    topBar = { Header(scale, connect) },
+    topBar = { Header(scale, store.saveError, connect) },
     bottomBar = {
       NavigationBar(containerColor = p.card) {
         tabs.forEachIndexed { i, (label, icon) ->
@@ -158,7 +158,7 @@ fun App(scale: Scale, store: Store, connect: () -> Unit) {
 }
 
 @Composable
-fun Header(scale: Scale, connect: () -> Unit) {
+fun Header(scale: Scale, error: String?, connect: () -> Unit) {
   val now = rememberNow(500)
   val last = scale.trace.lastOrNull()
   val live = last != null && now - last.t < 3_000
@@ -171,7 +171,7 @@ fun Header(scale: Scale, connect: () -> Unit) {
     Text("pull", style = MaterialTheme.typography.titleMedium, color = p.pink)
     Box(Modifier.size(10.dp).background(if (live) p.green else if (scale.scanning) p.orange else p.red, CircleShape))
     Text(
-      if (live) "scale" else if (scale.scanning) "searching" else scale.status.lowercase(),
+      error ?: if (live) "scale" else if (scale.scanning) "searching" else scale.status.lowercase(),
       Modifier.weight(1f),
       style = MaterialTheme.typography.labelMedium,
       color = p.muted,

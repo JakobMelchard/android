@@ -17,7 +17,6 @@ test:
 install: build
 	adb -s $(SERIAL) install -r app/build/outputs/apk/debug/app-debug.apk
 
-# install and make fz the default Home app on SERIAL
 home: install
 	adb -s $(SERIAL) shell cmd package set-home-activity io.lilfeelz.fz/.MainActivity
 	adb -s $(SERIAL) shell input keyevent KEYCODE_HOME

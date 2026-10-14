@@ -87,7 +87,6 @@ fun usage(stored: String?): Pair<Long, Long> {
   return if (n == null || t == null) 0L to 0L else n to t
 }
 
-// launches / (1 + days since last launch)
 fun frecency(stored: String?, now: Long): Double {
   val (n, t) = usage(stored)
   return n / (1 + (now - t) / 86_400_000.0)
@@ -139,9 +138,8 @@ class MainActivity : ComponentActivity() {
     resumes++
   }
 
-  // queryIntentActivities plus one loadLabel IPC per activity: off the main thread, the list swaps in when
-  // done. Usage entries of apps no longer installed are dropped on the way. One load at a time: a burst of
-  // package broadcasts cancels the load in flight, so an older list never lands after a newer one.
+  // One loadLabel IPC per activity, so off the main thread. A burst of package broadcasts cancels the
+  // load in flight, so an older list never lands after a newer one.
   private fun loadApps() {
     load?.cancel()
     load = lifecycleScope.launch(Dispatchers.IO) {

@@ -216,10 +216,14 @@ fun Max(scale: Scale, store: Store) {
     }
     Panel { Graph(pts, s - 3_000, end) }
   }
+  // onStop cancels the session without a recomposition (the frame clock is paused), so this effect lives on
+  // in the background: after each wait, only a session still running is beeped for and saved.
   LaunchedEffect(s) {
     delay(s - SystemClock.elapsedRealtime())
+    if (store.maxStart != s) return@LaunchedEffect
     beep()
     delay(end - SystemClock.elapsedRealtime())
+    if (store.maxStart != s) return@LaunchedEffect
     beep(400)
     val xs = scale.trace.filter { it.t in s..end }
     val prev = store.best(store.grip, hand)
@@ -360,10 +364,12 @@ fun Repeaters(scale: Scale, store: Store) {
     }
   }
   LaunchedEffect(i) { if (i > 0) beep(if (pulling) 400 else 150) }
-  // The timer outlives this composition, so it must call the latest finish.
+  // The timer outlives this composition, so it must call the latest finish. It also outlives a session that
+  // onStop cancelled while the app was in the background (no recomposition), so it saves only a running one.
   val fin by rememberUpdatedState(finish)
   LaunchedEffect(s) {
     delay(starts.last() - SystemClock.elapsedRealtime())
+    if (store.repStart != s) return@LaunchedEffect
     beep(800)
     fin()
   }

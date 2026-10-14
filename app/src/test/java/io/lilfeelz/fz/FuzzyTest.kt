@@ -55,4 +55,13 @@ class FuzzyTest {
     val day = 86_400_000L
     for (ahead in listOf(1L, day, 3 * day)) assertEquals(4.0, frecency("4|${ahead}", 0), 1e-9)
   }
+
+  @Test fun staleKeysDropsOnlyUnlisted() {
+    val a = app("a")
+    assertEquals(setOf("gone/c"), staleKeys(setOf(a.key, "gone/c"), listOf(a)))
+  }
+
+  @Test fun staleKeysKeepsAllOnEmptyList() = assertEquals(emptySet<String>(), staleKeys(setOf("p/c"), emptyList()))
+
+  @Test fun stampRoundTripsThroughUsage() = assertEquals(8L to 1234L, usage(stamp(8, 1234)))
 }

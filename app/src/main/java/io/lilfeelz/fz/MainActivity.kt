@@ -87,6 +87,12 @@ fun usage(stored: String?): Pair<Long, Long> {
   return if (n == null || t == null) 0L to 0L else n to t
 }
 
+fun stamp(n: Long, now: Long) = "$n|$now"
+
+// an empty list is a failed query, not an uninstall of everything
+fun staleKeys(stored: Set<String>, apps: List<App>): Set<String> =
+  if (apps.isEmpty()) emptySet() else stored - apps.map { it.key }.toSet()
+
 fun frecency(stored: String?, now: Long): Double {
   val (n, t) = usage(stored)
   // a clock set back after a launch makes now - t negative
@@ -149,8 +155,7 @@ class MainActivity : ComponentActivity() {
         .map { App(it.loadLabel(packageManager).toString(), it.activityInfo.packageName, it.activityInfo.name) }
         .filter { it.pkg != packageName }
       ensureActive()
-      val keys = list.map { it.key }.toSet()
-      prefs.edit().apply { prefs.all.keys.filter { it !in keys }.forEach(::remove) }.apply()
+      prefs.edit().apply { staleKeys(prefs.all.keys, list).forEach(::remove) }.apply()
       withContext(Dispatchers.Main) { apps = list }
     }
   }
@@ -164,7 +169,7 @@ class MainActivity : ComponentActivity() {
       return loadApps()
     }
     val (n, _) = usage(prefs.getString(a.key, null))
-    prefs.edit().putString(a.key, "${n + 1}|${System.currentTimeMillis()}").apply()
+    prefs.edit().putString(a.key, stamp(n + 1, System.currentTimeMillis())).apply()
   }
 
   private fun matches(): List<App> {

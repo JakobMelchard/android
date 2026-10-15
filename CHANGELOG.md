@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.3](https://github.com/JakobMelchard/fz/compare/v0.1.2...v0.1.3) (2026-10-15)
+
+
+### Features
+
+* include work profile apps via LauncherApps ([#47](https://github.com/JakobMelchard/fz/issues/47)) ([e3ca830](https://github.com/JakobMelchard/fz/commit/e3ca8306a5679eb4a5a475765bf2c2169e2afe4e))
+
 ## [0.1.2](https://github.com/JakobMelchard/fz/compare/v0.1.1...v0.1.2) (2026-10-15)
 
 

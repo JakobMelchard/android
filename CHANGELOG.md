@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/JakobMelchard/fz/compare/v0.1.1...v0.1.2) (2026-10-15)
+
+
+### Bug Fixes
+
+* **release:** sign with the keystore's only key when no alias is set ([#43](https://github.com/JakobMelchard/fz/issues/43)) ([b609bd1](https://github.com/JakobMelchard/fz/commit/b609bd14eefc483601d93ff3eec3d240c66da0b0))
+
 ## [0.1.1](https://github.com/JakobMelchard/fz/compare/v0.1.0...v0.1.1) (2026-10-15)
 
 

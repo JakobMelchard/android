@@ -329,7 +329,8 @@ fun Repeaters(scale: Scale, store: Store) {
   val ph = remember(p) { schedule(p) }
   val starts = ph.runningFold(s) { a, x -> a + x.ms }
   val i = starts.indexOfLast { it <= now }.coerceIn(0, ph.size - 1)
-  val zone = p.lo..p.hi
+  // Ordered here, not in capped(): the fields store every keystroke, so a swap there would overwrite the other bound.
+  val zone = minOf(p.lo, p.hi)..maxOf(p.lo, p.hi)
   val force = scale.trace.lastOrNull()?.kg ?: 0f
   val inZone = tally(ph, starts, scale.trace, now, zone).inZone
   val finish = {

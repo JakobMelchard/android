@@ -50,10 +50,16 @@ class StoreCodecTest {
   }
 
   @Test
-  fun targetBandIsFiniteNonNegativeAndOrdered() {
-    assertEquals(Plan(lo = 10f, hi = 30f), Plan(lo = 30f, hi = 10f).capped())
+  fun targetBandIsFiniteAndNonNegative() {
+    assertEquals(Plan(lo = 30f, hi = 10f), Plan(lo = 30f, hi = 10f).capped())
     assertEquals(Plan(lo = 0f, hi = 5f), Plan(lo = -3f, hi = 5f).capped())
     assertEquals(Plan(lo = 0f, hi = 0f), Plan(lo = Float.NaN, hi = Float.POSITIVE_INFINITY).capped())
-    assertEquals(Plan(lo = 10f, hi = 30f), decodePlan("7,3,6,3,180,30.0,10.0"))
+    assertEquals(Plan(lo = 30f, hi = 10f), decodePlan("7,3,6,3,180,30.0,10.0"))
+  }
+
+  @Test
+  fun typingMaxKeepsMin() {
+    // Each keystroke is stored: retyping max 25 as 30 passes through hi = 3.
+    assertEquals(Plan(lo = 20f, hi = 30f), Plan().copy(hi = 3f).capped().copy(hi = 30f).capped())
   }
 }

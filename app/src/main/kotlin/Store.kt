@@ -45,7 +45,7 @@ data class Plan(
     return copy(
       work = work.coerceIn(1, 3600), rest = rest.coerceIn(0, 3600), reps = reps.coerceIn(1, 50),
       sets = sets.coerceIn(1, 20), setRest = setRest.coerceIn(0, 3600),
-      lo = minOf(nn(lo), nn(hi)), hi = maxOf(nn(lo), nn(hi)),
+      lo = nn(lo), hi = nn(hi),
     )
   }
 }

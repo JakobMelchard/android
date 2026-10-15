@@ -23,7 +23,7 @@ ANDROID_SERIAL=emulator-5554 scripts/screenshots.sh   # regenerates docs/screens
 
 ## Install
 
-Releases carry a signed `pull-<version>.apk`; add the repo to [Obtainium](https://github.com/ImranR98/Obtainium) (with a GitHub token, the repo is private) for updates.
+Releases carry a signed `pull-<version>.apk`; add the repo to [Obtainium](https://github.com/ImranR98/Obtainium) for updates (while the repo is private, Obtainium needs a GitHub token).
 
 ## Use
 
@@ -48,3 +48,7 @@ Switch the scale on, open the app and allow Bluetooth and location; it locks ont
 | `app/src/main/kotlin/tokens/Tokens.kt` | colours and radii vendored from [JakobMelchard/web](https://github.com/JakobMelchard/web) `dist/tokens.kt` |
 | `scripts/` | `screenshots.sh` and its demo sessions |
 | `.github/workflows/release.yml` | release-please, then the signed APK |
+
+## License
+
+[MIT](LICENSE)

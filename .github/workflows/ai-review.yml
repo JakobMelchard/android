@@ -13,4 +13,4 @@ permissions:
 
 jobs:
   review:
-    uses: JakobMelchard/.github/.github/workflows/ai-review.yml@307a3b212591007521c674a5cc65abe76d43314d # v2.2.1
+    uses: JakobMelchard/.github/.github/workflows/ai-review.yml@153ecfd6362b6c1ec0be3f39d7020f36b2525e48 # v2.2.2

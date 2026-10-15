@@ -23,6 +23,9 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.foundation.text.BasicTextField
@@ -182,21 +185,24 @@ class MainActivity : ComponentActivity() {
     val focus = remember { FocusRequester() }
     val kb = LocalSoftwareKeyboardController.current
     val all = matches()
-    val list = all.take(8)
+    val scroll = rememberLazyListState()
     val shape = RoundedCornerShape(Tokens.radiusMd)
     Column(
       Modifier.fillMaxSize().background(Tokens.bg).systemBarsPadding().imePadding().padding(16.dp),
       verticalArrangement = Arrangement.Bottom,
     ) {
-      list.asReversed().forEach { a ->
-        val top = a == list.first()
-        Row(
-          Modifier.fillMaxWidth().heightIn(min = 44.dp)
-            .background(if (top) Tokens.hover else Color.Transparent, shape)
-            .clickable { launch(a) }.padding(horizontal = 12.dp),
-          verticalAlignment = Alignment.CenterVertically,
-        ) {
-          BasicText(a.label, style = mono.copy(color = if (top) Tokens.accent else Tokens.fg))
+      // reversed so the top hit sits next to the field and the rest scrolls away upward
+      LazyColumn(Modifier.weight(1f).fillMaxWidth(), scroll, reverseLayout = true) {
+        items(all, key = { it.key }) { a ->
+          val top = a == all.first()
+          Row(
+            Modifier.fillMaxWidth().heightIn(min = 44.dp)
+              .background(if (top) Tokens.hover else Color.Transparent, shape)
+              .clickable { launch(a) }.padding(horizontal = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+          ) {
+            BasicText(a.label, style = mono.copy(color = if (top) Tokens.accent else Tokens.fg))
+          }
         }
       }
       BasicText(
@@ -218,11 +224,12 @@ class MainActivity : ComponentActivity() {
           keyboardOptions = KeyboardOptions(
             autoCorrectEnabled = false, keyboardType = KeyboardType.Password, imeAction = ImeAction.Go,
           ),
-          keyboardActions = KeyboardActions(onGo = { list.firstOrNull()?.let(::launch) }),
+          keyboardActions = KeyboardActions(onGo = { all.firstOrNull()?.let(::launch) }),
           modifier = Modifier.fillMaxWidth().focusRequester(focus),
         )
       }
     }
     LaunchedEffect(resumes) { focus.requestFocus(); kb?.show() }
+    LaunchedEffect(query, resumes) { scroll.scrollToItem(0) }
   }
 }

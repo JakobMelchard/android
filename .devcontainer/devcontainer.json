@@ -17,11 +17,6 @@
             "contents": "read"
           }
         },
-        "JakobMelchard/.agents": {
-          "permissions": {
-            "contents": "read"
-          }
-        },
         "JakobMelchard/.config": {
           "permissions": {
             "contents": "read"

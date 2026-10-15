@@ -17,7 +17,7 @@ android {
     create("release") {
       storeFile = System.getenv("KEYSTORE_PATH")?.let(::file)
       storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-      keyAlias = "fz"
+      keyAlias = System.getenv("ANDROID_KEY_ALIAS")
       keyPassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
     }
   }

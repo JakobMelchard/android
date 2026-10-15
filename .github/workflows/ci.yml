@@ -13,7 +13,10 @@ jobs:
     uses: JakobMelchard/.github/.github/workflows/android.yml@4258fca96cbd14e90054debed585f9cf8aad04f7 # v2.1.0
     with:
       android-packages: platforms;android-35 build-tools;35.0.0
+      gradle-tasks: ktlintCheck testDebugUnitTest assembleDebug
       artifact-path: app/build/outputs/apk/debug/*.apk
 
   hooks:
     uses: JakobMelchard/.github/.github/workflows/hooks.yml@4258fca96cbd14e90054debed585f9cf8aad04f7 # v2.1.0
+    with:
+      skip: ktlint

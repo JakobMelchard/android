@@ -5,6 +5,7 @@ Android launcher that is one text field: type, fuzzy-match app labels, Enter lau
 ```sh
 make build   # debug APK
 make test    # unit tests
+make lint    # ktlint with Compose rules; make fmt fixes
 make emu     # boot the fz_pixel7 AVD
 make home    # install on SERIAL (default emulator-5554) and set as Home
 ```

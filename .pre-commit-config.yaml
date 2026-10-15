@@ -11,3 +11,12 @@ repos:
     rev: v1.0.1
     hooks:
       - id: conventional-commit
+  # CI runs ktlintCheck in the android job, so hooks.yml skips it.
+  - repo: local
+    hooks:
+      - id: ktlint
+        name: ktlint
+        entry: make lint
+        language: system
+        files: \.kts?$
+        pass_filenames: false

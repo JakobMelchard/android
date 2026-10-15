@@ -1,13 +1,17 @@
 package io.lilfeelz.fz
 
 import android.content.ActivityNotFoundException
+import android.content.ComponentName
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.content.pm.LauncherApps
 import android.net.Uri
 import android.os.Bundle
-import android.provider.Settings
+import android.os.Process
+import android.os.UserHandle
+import android.os.UserManager
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.addCallback
@@ -63,8 +67,10 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-data class App(val label: String, val pkg: String, val cls: String) {
-  val key get() = "$pkg/$cls"
+// profile: user serial number for apps outside fz's own user (work profile), null for fz's own
+data class App(val label: String, val pkg: String, val cls: String, val profile: Long? = null) {
+  // own-user keys keep the old form so existing usage survives
+  val key get() = if (profile == null) "$pkg/$cls" else "$pkg/$cls@$profile"
 }
 
 // subsequence match: consecutive chars and word starts score higher
@@ -122,8 +128,19 @@ class MainActivity : ComponentActivity() {
   private var resumes by mutableIntStateOf(0)
   private var load: Job? = null
 
-  // The list is loaded once here and again when a package changes, not on every Home press.
-  private val changed = object : BroadcastReceiver() {
+  private val launcher by lazy { getSystemService(LauncherApps::class.java) }
+  private val users by lazy { getSystemService(UserManager::class.java) }
+
+  // The list is loaded once here and again when a package or profile changes, not on every Home press.
+  // LauncherApps reports package changes in every profile; profiles coming and going are broadcasts.
+  private val packages = object : LauncherApps.Callback() {
+    override fun onPackageRemoved(p: String, u: UserHandle) = loadApps()
+    override fun onPackageAdded(p: String, u: UserHandle) = loadApps()
+    override fun onPackageChanged(p: String, u: UserHandle) = loadApps()
+    override fun onPackagesAvailable(p: Array<String>, u: UserHandle, r: Boolean) = loadApps()
+    override fun onPackagesUnavailable(p: Array<String>, u: UserHandle, r: Boolean) = loadApps()
+  }
+  private val profiles = object : BroadcastReceiver() {
     override fun onReceive(c: Context, i: Intent) = loadApps()
   }
 
@@ -133,16 +150,17 @@ class MainActivity : ComponentActivity() {
     enableEdgeToEdge(bars, bars)
     onBackPressedDispatcher.addCallback(this) { if (menu != null) menu = null else query = "" }
     setContent { Launcher() }
+    launcher.registerCallback(packages)
     val f = IntentFilter().apply {
-      for (a in listOf(Intent.ACTION_PACKAGE_ADDED, Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REPLACED)) addAction(a)
-      addDataScheme("package")
+      for (a in listOf(Intent.ACTION_MANAGED_PROFILE_ADDED, Intent.ACTION_MANAGED_PROFILE_REMOVED)) addAction(a)
     }
-    ContextCompat.registerReceiver(this, changed, f, ContextCompat.RECEIVER_NOT_EXPORTED)
+    ContextCompat.registerReceiver(this, profiles, f, ContextCompat.RECEIVER_NOT_EXPORTED)
     loadApps()
   }
 
   override fun onDestroy() {
-    unregisterReceiver(changed)
+    launcher.unregisterCallback(packages)
+    unregisterReceiver(profiles)
     super.onDestroy()
   }
 
@@ -158,19 +176,26 @@ class MainActivity : ComponentActivity() {
   private fun loadApps() {
     load?.cancel()
     load = lifecycleScope.launch(Dispatchers.IO) {
-      val i = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
-      val list = packageManager.queryIntentActivities(i, 0)
-        .map { App(it.loadLabel(packageManager).toString(), it.activityInfo.packageName, it.activityInfo.name) }
-        .filter { it.pkg != packageName }
+      val me = Process.myUserHandle()
+      val list = users.userProfiles.flatMap { u ->
+        val profile = if (u == me) null else users.getSerialNumberForUser(u)
+        launcher.getActivityList(null, u).map {
+          App(it.label.toString(), it.componentName.packageName, it.componentName.className, profile)
+        }
+      }.filter { it.pkg != packageName }
       ensureActive()
       prefs.edit().apply { staleKeys(prefs.all.keys, list).forEach(::remove) }.apply()
       withContext(Dispatchers.Main) { apps = list }
     }
   }
 
+  // null when the profile is gone
+  private fun user(a: App): UserHandle? =
+    if (a.profile == null) Process.myUserHandle() else users.getUserForSerialNumber(a.profile)
+
   private fun launch(a: App) {
     try {
-      startActivity(Intent().setClassName(a.pkg, a.cls).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+      launcher.startMainActivity(ComponentName(a.pkg, a.cls), user(a) ?: return loadApps(), null, null)
     } catch (_: ActivityNotFoundException) {
       return loadApps()
     } catch (_: SecurityException) {
@@ -180,10 +205,23 @@ class MainActivity : ComponentActivity() {
     prefs.edit().putString(a.key, stamp(n + 1, System.currentTimeMillis())).apply()
   }
 
-  private fun open(i: Intent) {
+  private fun info(a: App) {
     menu = null
     try {
-      startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+      launcher.startAppDetailsActivity(ComponentName(a.pkg, a.cls), user(a) ?: return, null, null)
+    } catch (_: ActivityNotFoundException) {
+    } catch (_: SecurityException) {
+    }
+  }
+
+  private fun uninstall(a: App) {
+    menu = null
+    // "android.intent.extra.USER" is Intent.EXTRA_USER, hidden from the SDK; the package installer reads it
+    // to uninstall from a profile of the caller, as Launcher3 does
+    val i = Intent(Intent.ACTION_DELETE, Uri.parse("package:${a.pkg}"))
+      .putExtra("android.intent.extra.USER", user(a) ?: return).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    try {
+      startActivity(i)
     } catch (_: ActivityNotFoundException) {
     }
   }
@@ -220,21 +258,21 @@ class MainActivity : ComponentActivity() {
             verticalAlignment = Alignment.CenterVertically,
           ) {
             BasicText(a.label, style = mono.copy(color = if (top) Tokens.accent else Tokens.fg))
+            if (a.profile != null) BasicText(" work", style = mono.copy(color = Tokens.muted))
           }
         }
       }
       // while the action row is open the count line names the app it acts on
       BasicText(
-        menu?.label ?: "${all.size}/${apps.size}",
+        menu?.let { it.label + if (it.profile != null) " work" else "" } ?: "${all.size}/${apps.size}",
         Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         style = mono.copy(color = Tokens.muted, fontSize = 13.sp),
       )
       menu?.let { a ->
-        val pkg = Uri.parse("package:${a.pkg}")
         Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), Arrangement.spacedBy(8.dp)) {
           for ((name, act) in listOf<Pair<String, () -> Unit>>(
-            "info" to { open(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkg)) },
-            "uninstall" to { open(Intent(Intent.ACTION_DELETE, pkg)) },
+            "info" to { info(a) },
+            "uninstall" to { uninstall(a) },
             "forget" to { forget(a) },
           )) {
             BasicText(

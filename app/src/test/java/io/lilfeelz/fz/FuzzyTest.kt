@@ -71,4 +71,19 @@ class FuzzyTest {
     stored.remove(apps[0].key)
     assertEquals(listOf("B", "C", "A"), rank("", apps) { frecency(stored[it.key], 0) }.map { it.label })
   }
+
+  @Test fun ownProfileKeyKeepsOldForm() = assertEquals("p/c", App("x", "p", "c").key)
+
+  @Test fun profilesRankSeparately() {
+    val own = App("Chrome", "p", "c")
+    val work = own.copy(profile = 10)
+    assertEquals("p/c@10", work.key)
+    val stored = mapOf(work.key to "5|0")
+    assertEquals(listOf(work, own), rank("", listOf(own, work)) { frecency(stored[it.key], 0) })
+  }
+
+  @Test fun staleKeysTracksProfilesApart() {
+    val own = App("Chrome", "p", "c")
+    assertEquals(setOf("p/c@10"), staleKeys(setOf(own.key, "p/c@10"), listOf(own)))
+  }
 }

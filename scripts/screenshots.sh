@@ -12,10 +12,11 @@ out=docs/screenshots
 ui() { "$adb" exec-out uiautomator dump /dev/tty 2>/dev/null || true; }
 # Tap the centre of the first view whose text is $1.
 tap() {
-  local b
+  local b x y
   b=$(ui | grep -o "text=\"$1\"[^>]*" | grep -o 'bounds="[^"]*"' | sed -n 1p | tr '[],"' '    ' | awk '{print int(($2+$4)/2), int(($3+$5)/2)}') || true
   [ -n "$b" ] || { echo "screenshots: no view \"$1\"" >&2; exit 1; }
-  "$adb" shell input tap $b
+  read -r x y <<<"$b"
+  "$adb" shell input tap "$x" "$y"
   sleep 1.5
 }
 shot() { "$adb" exec-out screencap -p >"$out/$1.png"; }

@@ -30,7 +30,18 @@ class RepeatersTest {
   fun zoneBoundsAreInclusive() = assertEquals(100, tally(ph, starts, listOf(r(1, 20f), r(2, 25f)), 30_000, zone).inZone)
 
   @Test
-  fun samplesBeforeStartAreIgnored() = assertEquals(emptyList<Reading>(), tally(ph, starts.map { it + 1_000 }, listOf(r(500, 22f)), 0, zone).xs)
+  fun samplesBeforeStartAreIgnored() = assertEquals(
+    emptyList<Reading>(),
+    tally(
+      ph,
+      starts.map {
+        it + 1_000
+      },
+      listOf(r(500, 22f)),
+      0,
+      zone,
+    ).xs,
+  )
 
   @Test
   fun partialSessionCountsOnlyEndedPulls() {

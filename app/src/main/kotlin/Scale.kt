@@ -1,7 +1,5 @@
 package io.jakobmelchard.pull
 
-import kotlinx.coroutines.delay
-import kotlin.random.Random
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
 import android.bluetooth.le.ScanCallback
@@ -11,9 +9,12 @@ import android.bluetooth.le.ScanSettings
 import android.content.Context
 import android.os.SystemClock
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
+import kotlin.random.Random
 
 const val COMPANY = 0x0100
 
@@ -50,7 +51,7 @@ class Scale(private val ctx: Context) {
   val trace = mutableStateListOf<Reading>()
   var status by mutableStateOf("Not scanning")
   var scanning by mutableStateOf(false)
-  var tare by mutableStateOf(0f)
+  var tare by mutableFloatStateOf(0f)
   private val lock = Lock()
 
   private val cb = object : ScanCallback() {

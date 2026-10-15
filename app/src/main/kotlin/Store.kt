@@ -3,6 +3,7 @@ package io.jakobmelchard.pull
 import android.content.SharedPreferences
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -43,20 +44,23 @@ data class Plan(
   fun capped(): Plan {
     fun nn(v: Float) = if (v.isFinite()) v.coerceAtLeast(0f) else 0f
     return copy(
-      work = work.coerceIn(1, 3600), rest = rest.coerceIn(0, 3600), reps = reps.coerceIn(1, 50),
-      sets = sets.coerceIn(1, 20), setRest = setRest.coerceIn(0, 3600),
-      lo = nn(lo), hi = nn(hi),
+      work = work.coerceIn(1, 3600),
+      rest = rest.coerceIn(0, 3600),
+      reps = reps.coerceIn(1, 50),
+      sets = sets.coerceIn(1, 20),
+      setRest = setRest.coerceIn(0, 3600),
+      lo = nn(lo),
+      hi = nn(hi),
     )
   }
 }
 
 fun encodePlan(p: Plan) = listOf(p.work, p.rest, p.reps, p.sets, p.setRest, p.lo, p.hi).joinToString(",")
 
-fun decodePlan(s: String?): Plan =
-  runCatching {
-    val f = s!!.split(",")
-    Plan(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5].toFloat(), f[6].toFloat()).capped()
-  }.getOrDefault(Plan())
+fun decodePlan(s: String?): Plan = runCatching {
+  val f = s!!.split(",")
+  Plan(f[0].toInt(), f[1].toInt(), f[2].toInt(), f[3].toInt(), f[4].toInt(), f[5].toFloat(), f[6].toFloat()).capped()
+}.getOrDefault(Plan())
 
 fun encodeSessions(list: List<Session>): String {
   val a = JSONArray()
@@ -76,9 +80,14 @@ fun decodeSessions(s: String): List<Session> {
   return List(a.length()) {
     val o = a.getJSONObject(it)
     Session(
-      o.getLong("at"), o.getString("type"), o.getString("hand"),
-      o.getDouble("peak").toFloat(), o.getDouble("avg").toFloat(),
-      o.getDouble("body").toFloat(), o.getString("note"), o.optLong("grip", 0),
+      o.getLong("at"),
+      o.getString("type"),
+      o.getString("hand"),
+      o.getDouble("peak").toFloat(),
+      o.getDouble("avg").toFloat(),
+      o.getDouble("body").toFloat(),
+      o.getString("note"),
+      o.optLong("grip", 0),
     )
   }
 }
@@ -141,7 +150,7 @@ class Store(dir: File, private val kv: Kv) {
     repStart = null
   }
 
-  private var _grip by mutableStateOf(kv["grip"] as? Long ?: 1L)
+  private var _grip by mutableLongStateOf(kv["grip"] as? Long ?: 1L)
   var grip: Long
     get() = _grip
     set(v) {
@@ -187,8 +196,7 @@ class Store(dir: File, private val kv: Kv) {
   fun gripName(id: Long) = grips.firstOrNull { it.id == id }?.name ?: if (id == 0L) "No grip" else "Deleted grip"
 
   // Best max pull on a grip for one hand, or null before the first test.
-  fun best(grip: Long, hand: String) =
-    sessions.filter { it.type == "max" && it.grip == grip && it.hand == hand }.maxOfOrNull { it.peak }
+  fun best(grip: Long, hand: String) = sessions.filter { it.type == "max" && it.grip == grip && it.hand == hand }.maxOfOrNull { it.peak }
 
   fun addGrip(name: String) {
     val g = Grip(nextGripId(grips, sessions), name)

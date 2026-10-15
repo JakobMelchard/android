@@ -8,7 +8,8 @@ class StoreCodecTest {
   private val s = Session(1700000000000, "max", "L", 31.5f, 28f, 70f, "good", 3)
 
   @Test
-  fun sessionsRoundTrip() = assertEquals(listOf(s, s.copy(at = 2, grip = 0)), decodeSessions(encodeSessions(listOf(s, s.copy(at = 2, grip = 0)))))
+  fun sessionsRoundTrip() =
+    assertEquals(listOf(s, s.copy(at = 2, grip = 0)), decodeSessions(encodeSessions(listOf(s, s.copy(at = 2, grip = 0)))))
 
   @Test
   fun sessionWithoutGripReadsAsNone() =
@@ -21,7 +22,8 @@ class StoreCodecTest {
   }
 
   @Test
-  fun gripsRoundTrip() = assertEquals(listOf(Grip(1, "Pinch"), Grip(9, "Sloper")), decodeGrips(encodeGrips(listOf(Grip(1, "Pinch"), Grip(9, "Sloper")))))
+  fun gripsRoundTrip() =
+    assertEquals(listOf(Grip(1, "Pinch"), Grip(9, "Sloper")), decodeGrips(encodeGrips(listOf(Grip(1, "Pinch"), Grip(9, "Sloper")))))
 
   @Test
   fun planRoundTrip() = assertEquals(Plan(5, 5, 4, 2, 90, 10.5f, 15f), decodePlan(encodePlan(Plan(5, 5, 4, 2, 90, 10.5f, 15f))))

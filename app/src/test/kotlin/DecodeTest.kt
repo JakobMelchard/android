@@ -7,12 +7,11 @@ import org.junit.Test
 
 class DecodeTest {
   // 17-byte payload as seen from a WH-C06: 0x0BB8 = 3000 hundredths, byte 14 = stable kg.
-  private fun payload(hi: Int, lo: Int, flags: Int) =
-    ByteArray(17).also {
-      it[10] = hi.toByte()
-      it[11] = lo.toByte()
-      it[14] = flags.toByte()
-    }
+  private fun payload(hi: Int, lo: Int, flags: Int) = ByteArray(17).also {
+    it[10] = hi.toByte()
+    it[11] = lo.toByte()
+    it[14] = flags.toByte()
+  }
 
   @Test
   fun kilograms() {

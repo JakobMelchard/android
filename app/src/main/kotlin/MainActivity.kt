@@ -1,12 +1,7 @@
 package io.jakobmelchard.pull
 
-import kotlinx.coroutines.launch
-import androidx.lifecycle.lifecycleScope
-import android.content.pm.ApplicationInfo
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.consumeWindowInsets
 import android.Manifest
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
@@ -17,15 +12,17 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -61,8 +58,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
   private lateinit var scale: Scale
@@ -91,8 +91,12 @@ class MainActivity : ComponentActivity() {
     store = Store(filesDir, PrefsKv(getSharedPreferences("pull", MODE_PRIVATE)))
     // Debug builds started with --ez demo true draw synthetic pulls instead of scanning (scripts/screenshots.sh).
     demo = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0 && intent.getBooleanExtra("demo", false)
-    if (demo) lifecycleScope.launch { scale.demo() } else if (!granted()) ask.launch(perms)
-    setContent { PullTheme { App(scale, store) { if (granted()) scale.start() else ask.launch(perms) } } }
+    if (demo) {
+      lifecycleScope.launch { scale.demo() }
+    } else if (!granted()) {
+      ask.launch(perms)
+    }
+    setContent { PullTheme { App(scale, store, connect = { if (granted()) scale.start() else ask.launch(perms) }) } }
   }
 
   override fun onStart() {
@@ -110,7 +114,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun App(scale: Scale, store: Store, connect: () -> Unit) {
+fun App(scale: Scale, store: Store, connect: () -> Unit, modifier: Modifier = Modifier) {
   var tab by rememberSaveable { mutableIntStateOf(0) }
   val tabs = listOf(
     "Live" to Icons.Default.PlayArrow,
@@ -121,6 +125,7 @@ fun App(scale: Scale, store: Store, connect: () -> Unit) {
   )
   val p = LocalPalette.current
   Scaffold(
+    modifier,
     containerColor = p.bg,
     topBar = { Header(scale, store.saveError, connect) },
     bottomBar = {
@@ -158,20 +163,37 @@ fun App(scale: Scale, store: Store, connect: () -> Unit) {
 }
 
 @Composable
-fun Header(scale: Scale, error: String?, connect: () -> Unit) {
+fun Header(scale: Scale, error: String?, connect: () -> Unit, modifier: Modifier = Modifier) {
   val now = rememberNow(500)
   val last = scale.trace.lastOrNull()
   val live = last != null && now - last.t < 3_000
   val p = LocalPalette.current
   Row(
-    Modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
+    modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 8.dp),
     verticalAlignment = Alignment.CenterVertically,
     horizontalArrangement = Arrangement.spacedBy(8.dp),
   ) {
     Text("pull", style = MaterialTheme.typography.titleMedium, color = p.pink)
-    Box(Modifier.size(10.dp).background(if (live) p.green else if (scale.scanning) p.orange else p.red, CircleShape))
+    Box(
+      Modifier.size(10.dp).background(
+        if (live) {
+          p.green
+        } else if (scale.scanning) {
+          p.orange
+        } else {
+          p.red
+        },
+        CircleShape,
+      ),
+    )
     Text(
-      error ?: if (live) "scale" else if (scale.scanning) "searching" else scale.status.lowercase(),
+      error ?: if (live) {
+        "scale"
+      } else if (scale.scanning) {
+        "searching"
+      } else {
+        scale.status.lowercase()
+      },
       Modifier.weight(1f),
       style = MaterialTheme.typography.labelMedium,
       color = p.muted,
@@ -204,13 +226,13 @@ fun avgLoaded(xs: List<Reading>): Float {
 fun kg(x: Float) = "%.1f kg".format(x)
 
 @Composable
-fun Graph(pts: List<Reading>, from: Long, to: Long, zone: ClosedFloatingPointRange<Float>? = null) {
+fun Graph(pts: List<Reading>, from: Long, to: Long, modifier: Modifier = Modifier, zone: ClosedFloatingPointRange<Float>? = null) {
   val line = MaterialTheme.colorScheme.primary
   val band = LocalPalette.current.green.copy(alpha = 0.15f)
   val grid = MaterialTheme.colorScheme.outlineVariant
   val label = MaterialTheme.typography.labelSmall.copy(color = MaterialTheme.colorScheme.onSurfaceVariant)
   val tm = rememberTextMeasurer()
-  Canvas(Modifier.fillMaxWidth().height(220.dp)) {
+  Canvas(modifier.fillMaxWidth().height(220.dp)) {
     val top = maxOf(10f, (pts.maxOfOrNull { it.kg } ?: 0f) * 1.15f, (zone?.endInclusive ?: 0f) * 1.15f)
     fun x(t: Long) = (t - from).toFloat() / (to - from) * size.width
     fun y(v: Float) = size.height * (1 - v.coerceIn(0f, top) / top)
@@ -226,7 +248,7 @@ fun Graph(pts: List<Reading>, from: Long, to: Long, zone: ClosedFloatingPointRan
 }
 
 @Composable
-fun NumField(label: String, value: Float, modifier: Modifier = Modifier, onChange: (Float) -> Unit) {
+fun NumField(label: String, value: Float, onChange: (Float) -> Unit, modifier: Modifier = Modifier) {
   var s by remember { mutableStateOf(if (value % 1f == 0f) value.toInt().toString() else value.toString()) }
   OutlinedTextField(
     s,

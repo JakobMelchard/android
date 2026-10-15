@@ -1,9 +1,5 @@
 package io.jakobmelchard.pull
 
-import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.text.TextAutoSize
-import androidx.compose.foundation.text.BasicText
 import android.media.AudioManager
 import android.media.ToneGenerator
 import android.os.SystemClock
@@ -13,6 +9,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +19,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.DropdownMenu
@@ -46,8 +46,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.delay
+import androidx.compose.ui.unit.sp
 import jakobmelchard.tokens.RadiusTokens
+import kotlinx.coroutines.delay
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -60,26 +61,26 @@ fun secs(ms: Long) = "${(ms.coerceAtLeast(0) + 999) / 1000} s"
 
 fun pct(kg: Float, body: Float) = if (body > 0f) "%.0f%%".format(kg / body * 100) else "-"
 
-@Composable
 // Shrinks to stay on one line: 80sp only fits about six mono characters on a 360dp phone.
-fun Big(text: String, color: Color = LocalPalette.current.pink) =
-  BasicText(
-    text,
-    style = MaterialTheme.typography.displayLarge.copy(color = color),
-    maxLines = 1,
-    softWrap = false,
-    autoSize = TextAutoSize.StepBased(minFontSize = 32.sp, maxFontSize = 80.sp),
-  )
+@Composable
+fun Big(text: String, color: Color = LocalPalette.current.pink) = BasicText(
+  text,
+  style = MaterialTheme.typography.displayLarge.copy(color = color),
+  maxLines = 1,
+  softWrap = false,
+  autoSize = TextAutoSize.StepBased(minFontSize = 32.sp, maxFontSize = 80.sp),
+)
 
 @Composable
-fun Label(text: String) = Text(text, color = LocalPalette.current.muted, style = MaterialTheme.typography.labelMedium)
+fun Label(text: String, modifier: Modifier = Modifier) =
+  Text(text, modifier, color = LocalPalette.current.muted, style = MaterialTheme.typography.labelMedium)
 
 // The grip pill that heads Max and Repeaters; opens the grip menu.
 @Composable
-fun GripPicker(store: Store) {
+fun GripPicker(store: Store, modifier: Modifier = Modifier) {
   var open by remember { mutableStateOf(false) }
   val p = LocalPalette.current
-  Box {
+  Box(modifier) {
     Row(
       Modifier.border(1.dp, p.purple.copy(alpha = 0.5f), RoundedCornerShape(RadiusTokens.radiusPill.dp)).clickable { open = true }
         .padding(horizontal = 16.dp, vertical = 10.dp),
@@ -103,7 +104,7 @@ fun GripPicker(store: Store) {
 }
 
 @Composable
-fun Live(scale: Scale, store: Store) {
+fun Live(scale: Scale, store: Store, modifier: Modifier = Modifier) {
   val now = rememberNow()
   val p = LocalPalette.current
   var start by store::liveStart
@@ -111,15 +112,15 @@ fun Live(scale: Scale, store: Store) {
   val from = s ?: (now - 10_000)
   val pts = scale.trace.filter { it.t >= from }
   val peak = pts.maxOfOrNull { it.kg } ?: 0f
-  Screen({
-    Action(if (s == null) "Record" else "Stop and save", if (s == null) p.accent else p.orange) {
+  Screen(modifier, action = {
+    Action(if (s == null) "Record" else "Stop and save", color = if (s == null) p.accent else p.orange, onClick = {
       if (s == null) {
         start = now
       } else {
         if (pts.isNotEmpty()) store.add(Session(System.currentTimeMillis(), "live", "", peak, avgLoaded(pts), store.body, secs(now - s)))
         start = null
       }
-    }
+    })
   }) {
     Panel {
       Label(if (s == null) "force" else "recording")
@@ -135,7 +136,7 @@ fun Live(scale: Scale, store: Store) {
 }
 
 @Composable
-fun Max(scale: Scale, store: Store) {
+fun Max(scale: Scale, store: Store, modifier: Modifier = Modifier) {
   val now = rememberNow()
   val p = LocalPalette.current
   var hand by store::maxHand
@@ -145,14 +146,14 @@ fun Max(scale: Scale, store: Store) {
   var result by remember { mutableStateOf<Pair<Session, Float?>?>(null) }
   val s = t0
   if (s == null) {
-    Screen({
-      Action("Start") {
+    Screen(modifier, action = {
+      Action("Start", onClick = {
         result = null
         t0 = now + 3_000
-      }
+      })
     }) {
       GripPicker(store)
-      Seg(listOf("L", "R", "Both"), hand) { hand = it }
+      Seg(listOf("L", "R", "Both"), hand, onSelect = { hand = it })
       result?.let { (r, prev) ->
         Panel {
           when {
@@ -182,8 +183,8 @@ fun Max(scale: Scale, store: Store) {
       Panel {
         Label("setup")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          NumField("Bodyweight kg", store.body, Modifier.weight(1f)) { store.body = it }
-          NumField("Pull s", dur, Modifier.weight(1f)) { dur = it.coerceAtLeast(1f) }
+          NumField("Bodyweight kg", store.body, { store.body = it }, Modifier.weight(1f))
+          NumField("Pull s", dur, { dur = it.coerceAtLeast(1f) }, Modifier.weight(1f))
         }
       }
     }
@@ -192,7 +193,7 @@ fun Max(scale: Scale, store: Store) {
   val end = s + (dur * 1000).toLong()
   val pts = scale.trace.filter { it.t >= s - 3_000 }
   val ready = now < s
-  Screen({ Action("Cancel", p.red) { t0 = null } }) {
+  Screen(modifier, action = { Action("Cancel", onClick = { t0 = null }, color = p.red) }) {
     Text("${store.gripName(store.grip)}  $hand", color = p.purple, style = MaterialTheme.typography.titleSmall)
     Panel {
       Row(verticalAlignment = Alignment.CenterVertically) {
@@ -224,7 +225,8 @@ fun Max(scale: Scale, store: Store) {
     beep()
     delay(end - SystemClock.elapsedRealtime())
     val prev = store.best(store.grip, hand)
-    val r = maxSession(s, end, store.maxStart, scale.trace, hand, store.body, store.grip, System.currentTimeMillis()) ?: return@LaunchedEffect
+    val r =
+      maxSession(s, end, store.maxStart, scale.trace, hand, store.body, store.grip, System.currentTimeMillis()) ?: return@LaunchedEffect
     beep(400)
     if (scale.trace.any { it.t in s..end }) store.add(r)
     result = r to prev
@@ -241,11 +243,20 @@ fun maxSession(s: Long, end: Long, running: Long?, trace: List<Reading>, hand: S
 
 // The finished repeaters session, or null when it was cancelled or took no samples.
 fun repSession(s: Long, running: Long?, t: Tally, pulls: Int, p: Plan, body: Float, grip: Long, at: Long): Session? =
-  if (running != s || t.xs.isEmpty()) null
-  else Session(
-    at, "repeaters", "Both", t.xs.maxOf { it.kg }, avgLoaded(t.xs), body,
-    "${t.reps}/$pulls reps ${p.work}/${p.rest} s, ${t.inZone}% in ${kg(p.lo)} to ${kg(p.hi)}", grip,
-  )
+  if (running != s || t.xs.isEmpty()) {
+    null
+  } else {
+    Session(
+      at,
+      "repeaters",
+      "Both",
+      t.xs.maxOf { it.kg },
+      avgLoaded(t.xs),
+      body,
+      "${t.reps}/$pulls reps ${p.work}/${p.rest} s, ${t.inZone}% in ${kg(p.lo)} to ${kg(p.hi)}",
+      grip,
+    )
+  }
 
 data class Phase(val name: String, val ms: Long, val set: Int, val rep: Int)
 
@@ -272,7 +283,7 @@ fun tally(ph: List<Phase>, starts: List<Long>, trace: List<Reading>, now: Long, 
 }
 
 @Composable
-fun Repeaters(scale: Scale, store: Store) {
+fun Repeaters(scale: Scale, store: Store, modifier: Modifier = Modifier) {
   val now = rememberNow()
   val pal = LocalPalette.current
   var t0 by store::repStart
@@ -280,18 +291,18 @@ fun Repeaters(scale: Scale, store: Store) {
   val p = store.plan
   val s = t0
   if (s == null) {
-    Screen({
-      Action("Start") {
+    Screen(modifier, action = {
+      Action("Start", onClick = {
         done = null
         t0 = now
-      }
+      })
     }) {
       GripPicker(store)
       done?.let {
         Panel {
           Label("last session")
           Row {
-            Stat("avg", kg(it.avg), pal.pink)
+            Stat("avg", kg(it.avg), color = pal.pink)
             Stat("peak", kg(it.peak))
           }
           Label(it.note)
@@ -310,17 +321,19 @@ fun Repeaters(scale: Scale, store: Store) {
       Panel {
         Label("edit")
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          NumField("Pull s", p.work.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(work = it.toInt().coerceAtLeast(1)) }
-          NumField("Rest s", p.rest.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(rest = it.toInt().coerceAtLeast(0)) }
-          NumField("Reps", p.reps.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(reps = it.toInt().coerceAtLeast(1)) }
+          NumField("Pull s", p.work.toFloat(), { store.plan = store.plan.copy(work = it.toInt().coerceAtLeast(1)) }, Modifier.weight(1f))
+          NumField("Rest s", p.rest.toFloat(), { store.plan = store.plan.copy(rest = it.toInt().coerceAtLeast(0)) }, Modifier.weight(1f))
+          NumField("Reps", p.reps.toFloat(), { store.plan = store.plan.copy(reps = it.toInt().coerceAtLeast(1)) }, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          NumField("Sets", p.sets.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(sets = it.toInt().coerceAtLeast(1)) }
-          NumField("Set rest s", p.setRest.toFloat(), Modifier.weight(1f)) { store.plan = store.plan.copy(setRest = it.toInt().coerceAtLeast(0)) }
+          NumField("Sets", p.sets.toFloat(), { store.plan = store.plan.copy(sets = it.toInt().coerceAtLeast(1)) }, Modifier.weight(1f))
+          NumField("Set rest s", p.setRest.toFloat(), {
+            store.plan = store.plan.copy(setRest = it.toInt().coerceAtLeast(0))
+          }, Modifier.weight(1f))
         }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-          NumField("Target min kg", p.lo, Modifier.weight(1f)) { store.plan = store.plan.copy(lo = it) }
-          NumField("Target max kg", p.hi, Modifier.weight(1f)) { store.plan = store.plan.copy(hi = it) }
+          NumField("Target min kg", p.lo, { store.plan = store.plan.copy(lo = it) }, Modifier.weight(1f))
+          NumField("Target max kg", p.hi, { store.plan = store.plan.copy(hi = it) }, Modifier.weight(1f))
         }
       }
     }
@@ -342,7 +355,7 @@ fun Repeaters(scale: Scale, store: Store) {
     t0 = null
   }
   val pulling = ph[i].name == "Pull"
-  Screen({ Action("Stop and save", pal.orange, finish) }) {
+  Screen(modifier, action = { Action("Stop and save", color = pal.orange, onClick = finish) }) {
     Text(store.gripName(store.grip), color = pal.purple, style = MaterialTheme.typography.titleSmall)
     Panel {
       Row(verticalAlignment = Alignment.CenterVertically) {
@@ -364,13 +377,22 @@ fun Repeaters(scale: Scale, store: Store) {
       Row {
         Stat("set", "${ph[i].set}/${p.sets}")
         Stat("rep", "${ph[i].rep}/${p.reps}")
-        Stat("in target", "$inZone%", if (inZone >= 70) pal.green else pal.fg)
+        Stat("in target", "$inZone%", color = if (inZone >= 70) pal.green else pal.fg)
       }
       ph.getOrNull(i + 1)?.let { Label("next: ${it.name.lowercase()} ${secs(it.ms)}") }
     }
     Panel {
-      Big(kg(force), if (!pulling) pal.fg else if (force in zone) pal.green else pal.red)
-      Graph(scale.trace.filter { it.t >= now - 15_000 }, now - 15_000, now, zone)
+      Big(
+        kg(force),
+        if (!pulling) {
+          pal.fg
+        } else if (force in zone) {
+          pal.green
+        } else {
+          pal.red
+        },
+      )
+      Graph(scale.trace.filter { it.t >= now - 15_000 }, now - 15_000, now, zone = zone)
     }
   }
   LaunchedEffect(i) { if (i > 0) beep(if (pulling) 400 else 150) }
@@ -386,13 +408,13 @@ fun Repeaters(scale: Scale, store: Store) {
 }
 
 @Composable
-fun Grips(store: Store) {
+fun Grips(store: Store, modifier: Modifier = Modifier) {
   val p = LocalPalette.current
   val fmt = remember { SimpleDateFormat("d MMM", Locale.getDefault()) }
   var name by remember { mutableStateOf("") }
   // Delete takes two taps: the first arms it for that grip only.
   var arm by remember { mutableStateOf<Long?>(null) }
-  Screen {
+  Screen(modifier) {
     store.grips.forEach { g ->
       val xs = store.sessions.filter { it.grip == g.id }
       Panel(Modifier.clickable { store.grip = g.id }) {
@@ -411,7 +433,7 @@ fun Grips(store: Store) {
         Row {
           listOf("L", "R", "Both").forEach { h ->
             val b = store.best(g.id, h)
-            Stat(h, b?.let { kg(it) } ?: "-", if (b != null) p.pink else p.muted)
+            Stat(h, b?.let { kg(it) } ?: "-", color = if (b != null) p.pink else p.muted)
           }
         }
         val rep = xs.filter { it.type == "repeaters" }.maxOfOrNull { it.avg }
@@ -431,23 +453,23 @@ fun Grips(store: Store) {
       Label("new grip")
       Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedTextField(name, { name = it }, Modifier.weight(1f), placeholder = { Text("25 mm edge") }, singleLine = true)
-        Pill("Add", if (name.isNotBlank()) p.green else p.muted, enabled = name.isNotBlank()) {
+        Pill("Add", if (name.isNotBlank()) p.green else p.muted, enabled = name.isNotBlank(), onClick = {
           store.addGrip(name.trim())
           name = ""
-        }
+        })
       }
     }
   }
 }
 
 @Composable
-fun History(store: Store) {
+fun History(store: Store, modifier: Modifier = Modifier) {
   val p = LocalPalette.current
   val max = store.sessions.filter { it.type == "max" && it.grip == store.grip }.reversed()
   val fmt = remember { SimpleDateFormat("d MMM HH:mm", Locale.getDefault()) }
   // LazyColumn scrolls itself, so this screen does not use Screen.
   LazyColumn(
-    Modifier.fillMaxSize(),
+    modifier.fillMaxSize(),
     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
@@ -472,7 +494,7 @@ fun History(store: Store) {
           IconButton({ store.remove(s) }) { Icon(Icons.Default.Delete, "Delete", tint = p.muted) }
         }
         Row {
-          Stat("peak", kg(s.peak), p.pink)
+          Stat("peak", kg(s.peak), color = p.pink)
           Stat("avg", kg(s.avg))
           Stat("bw", pct(s.peak, s.body))
         }
@@ -483,13 +505,13 @@ fun History(store: Store) {
 }
 
 @Composable
-fun Trend(xs: List<Session>) {
+fun ColumnScope.Trend(xs: List<Session>, modifier: Modifier = Modifier) {
   val pal = LocalPalette.current
   val colors = mapOf("L" to pal.accent, "R" to pal.pink, "Both" to pal.purple)
   Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
     colors.filterKeys { h -> xs.any { it.hand == h } }.forEach { (h, c) -> Text(h, color = c) }
   }
-  Canvas(Modifier.fillMaxWidth().height(140.dp)) {
+  Canvas(modifier.fillMaxWidth().height(140.dp)) {
     val top = maxOf(xs.maxOf { it.peak } * 1.1f, 1f)
     fun x(i: Int) = i.toFloat() / (xs.size - 1) * size.width
     fun y(v: Float) = size.height * (1 - v / top)

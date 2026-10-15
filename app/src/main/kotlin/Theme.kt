@@ -1,47 +1,47 @@
 package io.jakobmelchard.pull
 
-import androidx.compose.ui.semantics.Role
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.selection.selectable
-import jakobmelchard.tokens.DarkTokens
-import jakobmelchard.tokens.LightTokens
-import jakobmelchard.tokens.RadiusTokens
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
+import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import jakobmelchard.tokens.DarkTokens
+import jakobmelchard.tokens.LightTokens
+import jakobmelchard.tokens.RadiusTokens
 
 // Org design tokens (tokens/Tokens.kt, vendored from JakobMelchard/web):
 // Dracula on black, dark is the brand, system monospace, line borders instead of shadows.
@@ -108,7 +108,12 @@ fun PullTheme(content: @Composable () -> Unit) {
     labelMedium = mono(15),
     labelSmall = mono(14),
   )
-  val shapes = Shapes(small = RoundedCornerShape(RadiusTokens.radiusSm.dp), medium = RoundedCornerShape(RadiusTokens.radiusMd.dp), large = RoundedCornerShape(RadiusTokens.radiusLg.dp))
+  val shapes =
+    Shapes(
+      small = RoundedCornerShape(RadiusTokens.radiusSm.dp),
+      medium = RoundedCornerShape(RadiusTokens.radiusMd.dp),
+      large = RoundedCornerShape(RadiusTokens.radiusLg.dp),
+    )
   CompositionLocalProvider(LocalPalette provides p) {
     MaterialTheme(colorScheme = colors, typography = type, shapes = shapes, content = content)
   }
@@ -128,8 +133,8 @@ fun Panel(modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> 
 
 // Screen frame: scrolling content, and the one primary action pinned in the thumb zone.
 @Composable
-fun Screen(action: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
-  Column(Modifier.fillMaxSize()) {
+fun Screen(modifier: Modifier = Modifier, action: (@Composable () -> Unit)? = null, content: @Composable ColumnScope.() -> Unit) {
+  Column(modifier.fillMaxSize()) {
     Column(
       Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp),
       verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -140,26 +145,26 @@ fun Screen(action: (@Composable () -> Unit)? = null, content: @Composable Column
 }
 
 @Composable
-fun Action(text: String, color: Color = LocalPalette.current.accent, onClick: () -> Unit) =
-  Button(
-    onClick,
-    Modifier.fillMaxWidth().height(60.dp),
-    shape = RoundedCornerShape(RadiusTokens.radiusLg.dp),
-    colors = ButtonDefaults.buttonColors(containerColor = color, contentColor = LocalPalette.current.bg),
-  ) { Text(text, style = MaterialTheme.typography.titleMedium) }
+fun Action(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, color: Color = LocalPalette.current.accent) = Button(
+  onClick,
+  modifier.fillMaxWidth().height(60.dp),
+  shape = RoundedCornerShape(RadiusTokens.radiusLg.dp),
+  colors = ButtonDefaults.buttonColors(containerColor = color, contentColor = LocalPalette.current.bg),
+) { Text(text, style = MaterialTheme.typography.titleMedium) }
 
 @Composable
-fun RowScope.Stat(label: String, value: String, color: Color = LocalPalette.current.fg) =
-  Column(Modifier.weight(1f)) {
-    Text(label, color = LocalPalette.current.muted, style = MaterialTheme.typography.labelMedium)
-    Text(value, color = color, style = MaterialTheme.typography.titleMedium)
-  }
+fun RowScope.Stat(label: String, value: String, modifier: Modifier = Modifier, color: Color = LocalPalette.current.fg) = Column(
+  modifier.weight(1f),
+) {
+  Text(label, color = LocalPalette.current.muted, style = MaterialTheme.typography.labelMedium)
+  Text(value, color = color, style = MaterialTheme.typography.titleMedium)
+}
 
 @Composable
-fun Seg(options: List<String>, selected: String, onSelect: (String) -> Unit) {
+fun Seg(options: List<String>, selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
   val p = LocalPalette.current
   Row(
-    Modifier.fillMaxWidth().border(1.dp, p.line, RoundedCornerShape(RadiusTokens.radiusLg.dp)).padding(4.dp),
+    modifier.fillMaxWidth().border(1.dp, p.line, RoundedCornerShape(RadiusTokens.radiusLg.dp)).padding(4.dp),
     horizontalArrangement = Arrangement.spacedBy(4.dp),
   ) {
     options.forEach { o ->
@@ -174,9 +179,8 @@ fun Seg(options: List<String>, selected: String, onSelect: (String) -> Unit) {
 }
 
 @Composable
-fun Pill(text: String, color: Color, enabled: Boolean = true, onClick: () -> Unit) =
-  Box(
-    Modifier.heightIn(min = 48.dp).border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(RadiusTokens.radiusPill.dp))
-      .clickable(enabled, role = Role.Button, onClick = onClick).padding(horizontal = 16.dp),
-    contentAlignment = Alignment.Center,
-  ) { Text(text, color = color, style = MaterialTheme.typography.labelLarge) }
+fun Pill(text: String, color: Color, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true) = Box(
+  modifier.heightIn(min = 48.dp).border(1.dp, color.copy(alpha = 0.5f), RoundedCornerShape(RadiusTokens.radiusPill.dp))
+    .clickable(enabled, role = Role.Button, onClick = onClick).padding(horizontal = 16.dp),
+  contentAlignment = Alignment.Center,
+) { Text(text, color = color, style = MaterialTheme.typography.labelLarge) }

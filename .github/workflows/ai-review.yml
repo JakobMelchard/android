@@ -5,10 +5,6 @@ on:
   pull_request:
     types: [labeled]
 
-concurrency:
-  group: ai-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
   pull-requests: write
@@ -17,4 +13,4 @@ permissions:
 
 jobs:
   review:
-    uses: JakobMelchard/.github/.github/workflows/ai-review.yml@4258fca96cbd14e90054debed585f9cf8aad04f7 # v2.1.0
+    uses: JakobMelchard/.github/.github/workflows/ai-review.yml@307a3b212591007521c674a5cc65abe76d43314d # v2.2.1

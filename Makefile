@@ -15,7 +15,7 @@ test:
 	./gradlew testDebugUnitTest
 
 lint:
-	./gradlew ktlintCheck
+	./gradlew ktlintCheck lintDebug
 
 fmt:
 	./gradlew ktlintFormat

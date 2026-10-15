@@ -30,6 +30,21 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures { compose = true }
+    lint {
+        warningsAsErrors = true
+        // Renovate owns versions; fz is the Home app and never lists itself, so it needs no icon.
+        disable +=
+            setOf(
+                "GradleDependency",
+                "NewerVersionAvailable",
+                "OldTargetApi",
+                "MissingApplicationIcon"
+            )
+    }
+}
+
+kotlin {
+    compilerOptions { allWarningsAsErrors = true }
 }
 
 ktlint { version = "1.8.0" }

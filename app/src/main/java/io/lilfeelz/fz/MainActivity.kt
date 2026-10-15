@@ -8,7 +8,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.LauncherApps
-import android.net.Uri
 import android.os.Bundle
 import android.os.Process
 import android.os.UserHandle
@@ -62,6 +61,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import androidx.core.content.edit
+import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
 import kotlin.math.ln
 import kotlinx.coroutines.Dispatchers
@@ -158,8 +159,8 @@ class MainActivity : ComponentActivity() {
         override fun onReceive(c: Context, i: Intent) = loadApps()
     }
 
-    override fun onCreate(s: Bundle?) {
-        super.onCreate(s)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
         val bars = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
         enableEdgeToEdge(bars, bars)
         onBackPressedDispatcher.addCallback(this) { if (menu != null) menu = null else query = "" }
@@ -218,7 +219,7 @@ class MainActivity : ComponentActivity() {
                 }
             }.filter { it.pkg != packageName }
             ensureActive()
-            prefs.edit().apply { staleKeys(prefs.all.keys, list).forEach(::remove) }.apply()
+            prefs.edit { staleKeys(prefs.all.keys, list).forEach(::remove) }
             withContext(Dispatchers.Main) { apps = list }
         }
     }
@@ -241,7 +242,7 @@ class MainActivity : ComponentActivity() {
             return loadApps()
         }
         val (n, _) = usage(prefs.getString(a.key, null))
-        prefs.edit().putString(a.key, stamp(n + 1, System.currentTimeMillis())).apply()
+        prefs.edit { putString(a.key, stamp(n + 1, System.currentTimeMillis())) }
     }
 
     private fun info(a: App) {
@@ -262,7 +263,7 @@ class MainActivity : ComponentActivity() {
         menu = null
         // "android.intent.extra.USER" is Intent.EXTRA_USER, hidden from the SDK; the package installer reads it
         // to uninstall from a profile of the caller, as Launcher3 does
-        val i = Intent(Intent.ACTION_DELETE, Uri.parse("package:${a.pkg}"))
+        val i = Intent(Intent.ACTION_DELETE, "package:${a.pkg}".toUri())
             .putExtra("android.intent.extra.USER", user(a) ?: return)
             .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         try {
@@ -272,7 +273,7 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun forget(a: App) {
-        prefs.edit().remove(a.key).apply()
+        prefs.edit { remove(a.key) }
         menu = null
     }
 

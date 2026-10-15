@@ -69,18 +69,26 @@ class MainActivity : ComponentActivity() {
   private lateinit var store: Store
   private var demo = false
 
-  private val perms =
+  // Scanning without neverForLocation needs precise location; approximate alone filters out the scale.
+  private val required =
     if (Build.VERSION.SDK_INT >= 31) {
       arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.ACCESS_FINE_LOCATION)
     } else {
       arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-  private val ask = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-    if (it.values.all { ok -> ok }) scale.start() else scale.status = "Bluetooth permission denied"
+  // Android 12+ ignores a request for fine location that does not also ask for coarse.
+  private val perms = required + Manifest.permission.ACCESS_COARSE_LOCATION
+
+  private val ask = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
+    when {
+      granted() -> scale.start()
+      result[Manifest.permission.ACCESS_COARSE_LOCATION] == true -> scale.status = "Precise location needed to find the scale"
+      else -> scale.status = "Bluetooth permission denied"
+    }
   }
 
-  private fun granted() = perms.all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
+  private fun granted() = required.all { checkSelfPermission(it) == PackageManager.PERMISSION_GRANTED }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)

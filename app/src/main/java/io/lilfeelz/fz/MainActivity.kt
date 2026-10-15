@@ -5,7 +5,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.addCallback
@@ -14,6 +16,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -115,6 +118,7 @@ class MainActivity : ComponentActivity() {
   private val prefs by lazy { getSharedPreferences("usage", MODE_PRIVATE) }
   private var apps by mutableStateOf(emptyList<App>())
   private var query by mutableStateOf("")
+  private var menu by mutableStateOf<App?>(null)
   private var resumes by mutableIntStateOf(0)
   private var load: Job? = null
 
@@ -127,7 +131,7 @@ class MainActivity : ComponentActivity() {
     super.onCreate(s)
     val bars = SystemBarStyle.dark(android.graphics.Color.TRANSPARENT)
     enableEdgeToEdge(bars, bars)
-    onBackPressedDispatcher.addCallback(this) { query = "" }
+    onBackPressedDispatcher.addCallback(this) { if (menu != null) menu = null else query = "" }
     setContent { Launcher() }
     val f = IntentFilter().apply {
       for (a in listOf(Intent.ACTION_PACKAGE_ADDED, Intent.ACTION_PACKAGE_REMOVED, Intent.ACTION_PACKAGE_CHANGED, Intent.ACTION_PACKAGE_REPLACED)) addAction(a)
@@ -145,6 +149,7 @@ class MainActivity : ComponentActivity() {
   override fun onResume() {
     super.onResume()
     query = ""
+    menu = null
     resumes++
   }
 
@@ -175,6 +180,19 @@ class MainActivity : ComponentActivity() {
     prefs.edit().putString(a.key, stamp(n + 1, System.currentTimeMillis())).apply()
   }
 
+  private fun open(i: Intent) {
+    menu = null
+    try {
+      startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: ActivityNotFoundException) {
+    }
+  }
+
+  private fun forget(a: App) {
+    prefs.edit().remove(a.key).apply()
+    menu = null
+  }
+
   private fun matches(): List<App> {
     val now = System.currentTimeMillis()
     return rank(query, apps) { frecency(prefs.getString(it.key, null), now) }
@@ -198,18 +216,36 @@ class MainActivity : ComponentActivity() {
           Row(
             Modifier.fillMaxWidth().heightIn(min = 44.dp)
               .background(if (top) Tokens.hover else Color.Transparent, shape)
-              .clickable { launch(a) }.padding(horizontal = 12.dp),
+              .combinedClickable(onLongClick = { menu = a }) { launch(a) }.padding(horizontal = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
           ) {
             BasicText(a.label, style = mono.copy(color = if (top) Tokens.accent else Tokens.fg))
           }
         }
       }
+      // while the action row is open the count line names the app it acts on
       BasicText(
-        "${all.size}/${apps.size}",
+        menu?.label ?: "${all.size}/${apps.size}",
         Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         style = mono.copy(color = Tokens.muted, fontSize = 13.sp),
       )
+      menu?.let { a ->
+        val pkg = Uri.parse("package:${a.pkg}")
+        Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), Arrangement.spacedBy(8.dp)) {
+          for ((name, act) in listOf<Pair<String, () -> Unit>>(
+            "info" to { open(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, pkg)) },
+            "uninstall" to { open(Intent(Intent.ACTION_DELETE, pkg)) },
+            "forget" to { forget(a) },
+          )) {
+            BasicText(
+              name,
+              Modifier.heightIn(min = 44.dp).border(1.dp, Tokens.line, shape)
+                .clickable(onClick = act).padding(horizontal = 12.dp, vertical = 10.dp),
+              style = mono,
+            )
+          }
+        }
+      }
       Row(
         Modifier.fillMaxWidth().heightIn(min = 44.dp)
           .background(Tokens.card, shape).border(1.dp, Tokens.line, shape).padding(horizontal = 12.dp),
@@ -217,7 +253,7 @@ class MainActivity : ComponentActivity() {
       ) {
         BasicText("> ", style = mono.copy(color = Tokens.accent))
         BasicTextField(
-          query, { query = it }, singleLine = true,
+          query, { query = it; menu = null }, singleLine = true,
           textStyle = mono,
           cursorBrush = SolidColor(Tokens.caret),
           // Password type hides Gboard's suggestion strip; no visualTransformation, so text stays visible

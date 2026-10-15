@@ -64,4 +64,11 @@ class FuzzyTest {
   @Test fun staleKeysKeepsAllOnEmptyList() = assertEquals(emptySet<String>(), staleKeys(setOf("p/c"), emptyList()))
 
   @Test fun stampRoundTripsThroughUsage() = assertEquals(8L to 1234L, usage(stamp(8, 1234)))
+
+  @Test fun forgottenAppDropsToBottom() {
+    val apps = listOf("A", "B", "C").map(::app)
+    val stored = mutableMapOf(apps[0].key to "9|0", apps[1].key to "5|0", apps[2].key to "1|0")
+    stored.remove(apps[0].key)
+    assertEquals(listOf("B", "C", "A"), rank("", apps) { frecency(stored[it.key], 0) }.map { it.label })
+  }
 }

@@ -1,6 +1,7 @@
 package io.lilfeelz.fz
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -85,5 +86,11 @@ class FuzzyTest {
   @Test fun staleKeysTracksProfilesApart() {
     val own = App("Chrome", "p", "c")
     assertEquals(setOf("p/c@10"), staleKeys(setOf(own.key, "p/c@10"), listOf(own)))
+  }
+
+  @Test fun asksHomeOnlyWhenAvailableUnheldAndNotAsked() {
+    assertTrue(askHome(available = true, held = false, asked = false))
+    for ((a, h, q) in listOf(Triple(false, false, false), Triple(true, true, false), Triple(true, false, true)))
+      assertFalse(askHome(a, h, q))
   }
 }

@@ -1,5 +1,6 @@
 package io.lilfeelz.fz
 
+import android.app.role.RoleManager
 import android.content.ActivityNotFoundException
 import android.content.ComponentName
 import android.content.BroadcastReceiver
@@ -12,11 +13,13 @@ import android.os.Bundle
 import android.os.Process
 import android.os.UserHandle
 import android.os.UserManager
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts.StartActivityForResult
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -118,6 +121,11 @@ fun rank(query: String, apps: List<App>, frecencyOf: (App) -> Double): List<App>
     .sortedByDescending { it.second }.map { it.first }
 }
 
+// ask for the Home role once per process, so a declined prompt does not come back on every resume
+fun askHome(available: Boolean, held: Boolean, asked: Boolean) = available && !held && !asked
+
+private var askedHome = false
+
 private val mono = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 18.sp, color = Tokens.fg)
 
 class MainActivity : ComponentActivity() {
@@ -127,6 +135,9 @@ class MainActivity : ComponentActivity() {
   private var menu by mutableStateOf<App?>(null)
   private var resumes by mutableIntStateOf(0)
   private var load: Job? = null
+  private var home by mutableStateOf(true)
+  private val roles by lazy { getSystemService(RoleManager::class.java) }
+  private val role = registerForActivityResult(StartActivityForResult()) {}
 
   private val launcher by lazy { getSystemService(LauncherApps::class.java) }
   private val users by lazy { getSystemService(UserManager::class.java) }
@@ -169,6 +180,19 @@ class MainActivity : ComponentActivity() {
     query = ""
     menu = null
     resumes++
+    home = roles.isRoleHeld(RoleManager.ROLE_HOME)
+    if (askHome(roles.isRoleAvailable(RoleManager.ROLE_HOME), home, askedHome)) {
+      askedHome = true
+      role.launch(roles.createRequestRoleIntent(RoleManager.ROLE_HOME))
+    }
+  }
+
+  // the way back after a declined prompt; the system stops showing the prompt after repeated declines
+  private fun homeSettings() {
+    try {
+      startActivity(Intent(Settings.ACTION_HOME_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: ActivityNotFoundException) {
+    }
   }
 
   // One loadLabel IPC per activity, so off the main thread. A burst of package broadcasts cancels the
@@ -263,11 +287,18 @@ class MainActivity : ComponentActivity() {
         }
       }
       // while the action row is open the count line names the app it acts on
-      BasicText(
-        menu?.let { it.label + if (it.profile != null) " work" else "" } ?: "${all.size}/${apps.size}",
-        Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-        style = mono.copy(color = Tokens.muted, fontSize = 13.sp),
-      )
+      Row(verticalAlignment = Alignment.CenterVertically) {
+        BasicText(
+          menu?.let { it.label + if (it.profile != null) " work" else "" } ?: "${all.size}/${apps.size}",
+          Modifier.weight(1f).padding(horizontal = 12.dp, vertical = 8.dp),
+          style = mono.copy(color = Tokens.muted, fontSize = 13.sp),
+        )
+        if (!home && menu == null) BasicText(
+          "set as home",
+          Modifier.clickable(onClick = ::homeSettings).padding(horizontal = 12.dp, vertical = 8.dp),
+          style = mono.copy(color = Tokens.muted, fontSize = 13.sp),
+        )
+      }
       menu?.let { a ->
         Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), Arrangement.spacedBy(8.dp)) {
           for ((name, act) in listOf<Pair<String, () -> Unit>>(

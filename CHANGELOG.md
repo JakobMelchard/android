@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/JakobMelchard/pull/compare/v0.1.4...v0.1.5) (2026-10-15)
+
+
+### Bug Fixes
+
+* request coarse location with fine so Android 12+ shows the location prompt ([#55](https://github.com/JakobMelchard/pull/issues/55)) ([84e519a](https://github.com/JakobMelchard/pull/commit/84e519af9f48284d732a10641f3ca1ad0f19f9e6))
+
 ## [0.1.4](https://github.com/JakobMelchard/pull/compare/v0.1.3...v0.1.4) (2026-10-15)
 
 

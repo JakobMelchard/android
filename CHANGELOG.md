@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.1.4](https://github.com/JakobMelchard/pull/compare/v0.1.3...v0.1.4) (2026-10-15)
+
+
+### Bug Fixes
+
+* cap plan reps, sets and durations ([#38](https://github.com/JakobMelchard/pull/issues/38)) ([432067b](https://github.com/JakobMelchard/pull/commit/432067baf6f2df6fa7c4c032e03cdc70e54c7058))
+* keep a running session across tab switches and rotation ([#22](https://github.com/JakobMelchard/pull/issues/22)) ([57020fd](https://github.com/JakobMelchard/pull/commit/57020fd132887ce9559690bdab12a47be7c18412))
+* keep the max test's hand and pull length across tab switches ([#31](https://github.com/JakobMelchard/pull/issues/31)) ([2efe3f2](https://github.com/JakobMelchard/pull/commit/2efe3f26a435b6a1eae64c06150045ee2b326b45))
+* keep the other target bound while typing, order the band where it is used ([#50](https://github.com/JakobMelchard/pull/issues/50)) ([9dd8980](https://github.com/JakobMelchard/pull/commit/9dd8980101b573bd10f431fef1dc2589d262e4c7))
+* lock scanner after a valid frame and survive save errors ([#39](https://github.com/JakobMelchard/pull/issues/39)) ([f5ed53b](https://github.com/JakobMelchard/pull/commit/f5ed53b42b623104dc2039a8a31e7abf87d6d8cb))
+* save a max or repeaters session only while it is still running ([#35](https://github.com/JakobMelchard/pull/issues/35)) ([d8f9f95](https://github.com/JakobMelchard/pull/commit/d8f9f955cb4e95e1cc067d9dffb2e5d60d5d092f))
+* **store:** survive a corrupt sessions file and write it atomically ([#20](https://github.com/JakobMelchard/pull/issues/20)) ([f8daabb](https://github.com/JakobMelchard/pull/commit/f8daabb9bd380c40bde094eb13319b2f2f46ea03))
+
 ## [0.1.3](https://github.com/JakobMelchard/pull/compare/v0.1.2...v0.1.3) (2026-10-13)
 
 

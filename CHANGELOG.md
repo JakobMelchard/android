@@ -3,6 +3,11 @@
 ## [0.1.2](https://github.com/JakobMelchard/fz/compare/v0.1.1...v0.1.2) (2026-10-15)
 
 
+### Features
+
+* long-press app actions (info, uninstall, forget) ([#44](https://github.com/JakobMelchard/fz/issues/44)) ([97e0db1](https://github.com/JakobMelchard/fz/commit/97e0db1199a9084fc295654d568b612d2459f9db))
+
+
 ### Bug Fixes
 
 * **release:** sign with the keystore's only key when no alias is set ([#43](https://github.com/JakobMelchard/fz/issues/43)) ([b609bd1](https://github.com/JakobMelchard/fz/commit/b609bd14eefc483601d93ff3eec3d240c66da0b0))

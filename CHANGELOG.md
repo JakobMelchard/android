@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/JakobMelchard/pull/compare/v0.1.5...v0.1.6) (2026-10-16)
+
+
+### Bug Fixes
+
+* say precise location is missing only when fine was not granted ([#59](https://github.com/JakobMelchard/pull/issues/59)) ([3c5ab30](https://github.com/JakobMelchard/pull/commit/3c5ab30369f0a95dfd017341da4811c12921c2b0))
+
 ## [0.1.5](https://github.com/JakobMelchard/pull/compare/v0.1.4...v0.1.5) (2026-10-15)
 
 

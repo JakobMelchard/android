@@ -5,12 +5,13 @@ on:
   pull_request:
     types: [labeled]
 
-permissions:
-  contents: read
-  pull-requests: write
-  issues: write
-  id-token: write
+permissions: {}
 
 jobs:
   review:
     uses: JakobMelchard/.github/.github/workflows/ai-review.yml@531b4dcb30293e6219d67e312e164cc262a69955 # v2.3.1
+    permissions:
+      contents: read
+      pull-requests: write
+      issues: write
+      id-token: write

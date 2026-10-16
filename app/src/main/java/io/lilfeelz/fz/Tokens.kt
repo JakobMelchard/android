@@ -3,7 +3,7 @@ package io.lilfeelz.fz
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 
-// Hand port of the dark tokens in JakobMelchard/web dist/tokens.json (web has no Kotlin output).
+// Hand copy of DarkTokens and RadiusTokens from JakobMelchard/web dist/tokens.kt; the build does not pull it.
 object Tokens {
     val bg = Color(0xFF0B0D10)
     val card = Color(0xFF15171F)

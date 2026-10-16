@@ -83,7 +83,10 @@ class MainActivity : ComponentActivity() {
   private val ask = registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { result ->
     when {
       granted() -> scale.start()
-      result[Manifest.permission.ACCESS_COARSE_LOCATION] == true -> scale.status = "Precise location needed to find the scale"
+      // approximate granted, precise declined; a declined Nearby devices prompt falls through
+      result[Manifest.permission.ACCESS_FINE_LOCATION] != true &&
+        result[Manifest.permission.ACCESS_COARSE_LOCATION] == true ->
+        scale.status = "Precise location needed to find the scale"
       else -> scale.status = "Bluetooth permission denied"
     }
   }

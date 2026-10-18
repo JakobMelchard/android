@@ -16,4 +16,4 @@ Releases carry a signed `fz-<version>.apk`; add `https://github.com/JakobMelchar
 |---|---|
 | `app/src/main/java/io/lilfeelz/fz/MainActivity.kt` | app list, fuzzy match, frecency, UI |
 | `app/src/main/java/io/lilfeelz/fz/Tokens.kt` | org design tokens |
-| `app/src/test/` | unit tests for the fuzzy match |
+| `app/src/test/` | unit tests for the fuzzy match, frecency and ranking |

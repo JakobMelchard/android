@@ -50,7 +50,7 @@ kotlin {
 ktlint { version = "1.8.0" }
 
 dependencies {
-    ktlintRuleset("io.nlopez.compose.rules:ktlint:0.6.7")
+    ktlintRuleset("io.nlopez.compose.rules:ktlint:0.6.8")
     implementation(platform("androidx.compose:compose-bom:2025.12.01"))
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.activity:activity-compose:1.13.0")

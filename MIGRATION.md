@@ -21,7 +21,7 @@ The shared baseline is AGP9.4.1, Gradle9.8.2, Compose compiler2.4.21, Compose BO
 
 Both original apps passed unit tests, debug APK build, ktlint and Android lint before migration. The shared build passes the same checks for both apps. Source hash, application ID and history ancestry checks passed after relocation. Separate version inputs are tested in actual debug APK metadata. The release helper has six regression cases for component task/version/keystore isolation, explicit alias retention, missing-key and invalid-input rejection, and key cleanup on failure. These tests use synthetic keystores and stub tools only.
 
-CI is a two-component matrix calling the pinned shared Android workflow at v2.5.0. Local actionlint and shellcheck run before review. Hosted CI has not run for this unpublished repository. No signing secret was fetched; no production APK signing, device installation, Home-app replacement or signed upgrade test occurred.
+CI is one call of the pinned shared Android workflow at v2.5.0 with both apps' tasks, so the required `ci / ci` and `ci / pr-title` names stay. The `hooks / prek` job and prek config arrive with the template scaffold commit. Local actionlint and shellcheck run before review. Hosted CI has not run for this unpublished repository. No signing secret was fetched; no production APK signing, device installation, Home-app replacement or signed upgrade test occurred.
 
 ## Release and provisioning gates
 

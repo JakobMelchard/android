@@ -9,7 +9,7 @@ permissions: {}
 
 jobs:
   release:
-    uses: JakobMelchard/.github/.github/workflows/release.yml@531b4dcb30293e6219d67e312e164cc262a69955 # v2.3.1
+    uses: JakobMelchard/.github/.github/workflows/release.yml@88bfcf0fb6db99ff67f1e0e8f082f9b7e391028d # v2.4.1
     permissions:
       contents: read
       id-token: write
@@ -30,7 +30,7 @@ jobs:
           ref: ${{ needs.release.outputs.tag_name }}
           persist-credentials: false
 
-      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
         with:
           distribution: temurin
           java-version: "17"

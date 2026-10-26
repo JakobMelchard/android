@@ -22,8 +22,8 @@ tap() {
 shot() { "$adb" exec-out screencap -p >"$out/$1.png"; }
 sysui() { "$adb" shell am broadcast -a com.android.systemui.demo -e command "$@" >/dev/null; }
 
-./gradlew -q :app:assembleDebug
-"$adb" install -r -g app/build/outputs/apk/debug/app-debug.apk >/dev/null
+../../gradlew -p ../.. -q :apps:pull:assembleDebug
+"$adb" install -r -g build/outputs/apk/debug/pull-debug.apk >/dev/null
 night=$("$adb" shell cmd uimode night | tr -d '\r' | awk '{print $NF}')
 "$adb" shell cmd uimode night yes >/dev/null
 "$adb" shell settings put global sysui_demo_allowed 1

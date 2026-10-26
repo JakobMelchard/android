@@ -1,4 +1,4 @@
-root = true
+root = false
 
 [*]
 indent_style = space
@@ -27,5 +27,5 @@ ktlint_function_naming_ignore_when_annotated_with = Composable
 compose_allowed_composition_locals = LocalPalette
 
 # Vendored from JakobMelchard/web; regenerated there, never edited here.
-[app/src/main/kotlin/tokens/*.kt]
+[src/main/kotlin/tokens/*.kt]
 ktlint = disabled

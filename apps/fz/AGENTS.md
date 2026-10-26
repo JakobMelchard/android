@@ -1,6 +1,6 @@
 # AGENTS.md
 
-Commands and layout are in [README.md](README.md). Use the Makefile, not `./gradlew` from a shell with the default JDK.
+Commands and layout are in [README.md](README.md). Use the root Makefile with APP=fz, not `./gradlew` from a shell with the default JDK.
 
 - Colours and radii come from `Tokens.kt`, never literals. It is a hand port of the dark tokens in `JakobMelchard/web` `dist/tokens.json`; update it by hand when they change.
 - Ranking is `fuzzy` score plus `ln(1 + frecency)`; frecency is `launches / (1 + days since last launch)`, stored per `pkg/cls` in the `usage` SharedPreferences as `count|epochMs`.

@@ -1,0 +1,28 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    strategy:
+      matrix:
+        app: [fz, pull]
+    uses: JakobMelchard/.github/.github/workflows/android.yml@f0d18d59dc51bf3c06ce4747ec91f6a4b7c208c9 # v2.5.0
+    with:
+      setup-cmd: python3 -m unittest discover -s scripts -p 'test_*.py'
+      java-version: "17"
+      android-packages: platforms;android-36 build-tools;36.0.0
+      gradle-tasks: >-
+        ktlintCheck :apps:${{ matrix.app }}:ktlintCheck
+        :apps:${{ matrix.app }}:testDebugUnitTest
+        :apps:${{ matrix.app }}:lintDebug
+        :apps:${{ matrix.app }}:assembleDebug
+      artifact-name: ${{ matrix.app }}-debug
+      artifact-path: apps/${{ matrix.app }}/build/outputs/apk/debug/*.apk

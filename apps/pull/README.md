@@ -15,9 +15,8 @@ Android force trainer for the WH-C06 Bluetooth crane scale, a cheap stand-in for
 ## Build
 
 ```sh
-brew install prek && prek install
-./gradlew testDebugUnitTest assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+make -C ../.. check APP=pull
+# Device installation remains an explicit owner action.
 ANDROID_SERIAL=emulator-5554 scripts/screenshots.sh   # regenerates docs/screenshots, emulator only
 ```
 
@@ -41,13 +40,13 @@ Switch the scale on, open the app and allow Bluetooth and location; it locks ont
 
 | Path | Contents |
 |---|---|
-| `app/src/main/kotlin/Scale.kt` | scan, packet decode, tare, debug demo feed |
-| `app/src/main/kotlin/Store.kt` | sessions, grips, high scores, settings |
-| `app/src/main/kotlin/Screens.kt` | the five tabs |
-| `app/src/main/kotlin/Theme.kt` | palette, type scale, shared components |
-| `app/src/main/kotlin/tokens/Tokens.kt` | colours and radii vendored from [JakobMelchard/web](https://github.com/JakobMelchard/web) `dist/tokens.kt` |
+| `src/main/kotlin/Scale.kt` | scan, packet decode, tare, debug demo feed |
+| `src/main/kotlin/Store.kt` | sessions, grips, high scores, settings |
+| `src/main/kotlin/Screens.kt` | the five tabs |
+| `src/main/kotlin/Theme.kt` | palette, type scale, shared components |
+| `src/main/kotlin/tokens/Tokens.kt` | colours and radii vendored from [JakobMelchard/web](https://github.com/JakobMelchard/web) `dist/tokens.kt` |
 | `scripts/` | `screenshots.sh` and its demo sessions |
-| `.github/workflows/release.yml` | release-please, then the signed APK |
+| `../../scripts/release-apk` | release-please, then the signed APK |
 
 ## License
 

@@ -1,6 +1,16 @@
-plugins {
-  id("com.android.application") version "8.9.1" apply false
-  id("org.jetbrains.kotlin.android") version "2.1.20" apply false
-  id("org.jetbrains.kotlin.plugin.compose") version "2.1.20" apply false
-  id("org.jlleitschuh.gradle.ktlint") version "12.1.2" apply false
+plugins { id("android.application-conventions") }
+
+android {
+  namespace = "io.jakobmelchard.pull"
+  defaultConfig {
+    applicationId = "io.jakobmelchard.pull"
+    versionCode = providers.gradleProperty("pull.versionCode").orNull?.toInt() ?: 1
+    versionName = providers.gradleProperty("pull.versionName").orNull ?: "0.1.0"
+  }
+}
+
+dependencies {
+  implementation(libs.compose.material3)
+  implementation(libs.compose.icons)
+  testImplementation(libs.json)
 }

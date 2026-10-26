@@ -1,7 +1,24 @@
-plugins {
-    id("com.android.application") version "9.4.1" apply false
-    id("org.jetbrains.kotlin.plugin.compose") version "2.4.21" apply false
-    id("org.jlleitschuh.gradle.ktlint") version "14.2.0"
+plugins { id("android.application-conventions") }
+
+android {
+    namespace = "io.lilfeelz.fz"
+    defaultConfig {
+        applicationId = "io.lilfeelz.fz"
+        versionCode = providers.gradleProperty("fz.versionCode").orNull?.toInt() ?: 1
+        versionName = providers.gradleProperty("fz.versionName").orNull ?: "0.1"
+    }
+    lint {
+        warningsAsErrors = true
+        disable +=
+            setOf(
+                "GradleDependency",
+                "NewerVersionAvailable",
+                "OldTargetApi",
+                "MissingApplicationIcon"
+            )
+    }
 }
 
-ktlint { version = "1.8.0" }
+kotlin { compilerOptions { allWarningsAsErrors = true } }
+
+dependencies { implementation(libs.compose.foundation) }

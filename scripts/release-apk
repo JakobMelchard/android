@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Build one signed component APK. Credentials remain scoped to that component.
+set -euo pipefail
+umask 077
+
+[ "$#" -eq 2 ] || { echo "usage: release-apk <fz|pull> <x.y.z>" >&2; exit 2; }
+app=$1
+version=$2
+case "$app" in
+  fz) prefix=FZ ;;
+  pull) prefix=PULL ;;
+  *) echo "unknown application: $app" >&2; exit 2 ;;
+esac
+
+# Keep the existing major*10000+minor*100+patch scheme injective and within Android's limit.
+[[ "$version" =~ ^(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)$ ]] || {
+  echo "version must be x.y.z, without leading zeros; minor and patch must be below 100" >&2
+  exit 2
+}
+code=$((10#${BASH_REMATCH[1]} * 10000 + 10#${BASH_REMATCH[2]} * 100 + 10#${BASH_REMATCH[3]}))
+[ "$code" -le 2100000000 ] || { echo "versionCode exceeds Android's limit" >&2; exit 2; }
+
+encoded_name=${prefix}_KEYSTORE_B64
+password_name=${prefix}_KEYSTORE_PASSWORD
+alias_name=${prefix}_KEY_ALIAS
+: "${!encoded_name:?missing selected app keystore}" "${!password_name:?missing selected app password}"
+
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+key=$tmp/release.jks
+printf '%s' "${!encoded_name}" | base64 -d >"$key"
+export "${prefix}_KEYSTORE_PATH=$key"
+alias=${!alias_name:-}
+if [ -z "$alias" ]; then
+  alias=$(keytool -list -keystore "$key" -storepass:env "$password_name" |
+    awk -F', ' '/PrivateKeyEntry/ { value=$1; count++ } END { if (count != 1) exit 1; print value }')
+fi
+export "${prefix}_KEY_ALIAS=$alias"
+
+cd "$(dirname "$0")/.."
+./gradlew --no-daemon ":apps:$app:assembleRelease"   "-P$app.versionName=$version" "-P$app.versionCode=$code"
+cp "apps/$app/build/outputs/apk/release/$app-release.apk" "$app-$version.apk"

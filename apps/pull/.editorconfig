@@ -1,0 +1,31 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 2
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.go]
+indent_style = tab
+
+[Makefile]
+indent_style = tab
+
+[*.py]
+indent_size = 4
+
+[*.{kt,kts}]
+ktlint_code_style = intellij_idea
+max_line_length = 140
+ktlint_function_naming_ignore_when_annotated_with = Composable
+compose_allowed_composition_locals = LocalPalette
+
+# Vendored from JakobMelchard/web; regenerated there, never edited here.
+[app/src/main/kotlin/tokens/*.kt]
+ktlint = disabled

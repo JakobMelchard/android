@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon layer (Android 13+): the same curve and peak in one colour, tinted by the system. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+  android:width="108dp"
+  android:height="108dp"
+  android:viewportWidth="108"
+  android:viewportHeight="108">
+  <path
+    android:pathData="M28,72 L36,72 L45,40 L52,43 L58,41 L64,44 L70,42 L80,43"
+    android:strokeWidth="6"
+    android:strokeColor="#FFFFFFFF"
+    android:strokeLineCap="round"
+    android:strokeLineJoin="round" />
+  <path
+    android:pathData="M45,34 m-4.5,0 a4.5,4.5 0 1,0 9,0 a4.5,4.5 0 1,0 -9,0"
+    android:fillColor="#FFFFFFFF" />
+</vector>

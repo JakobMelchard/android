@@ -1,97 +1,61 @@
-# Consolidation pilot and cutover gates
+# Android migration
 
-## Owner decisions needed
+## Remaining owner decisions
 
-- Approve template draft PR77 for eventual merge, then restore Actions availability and wait for a release-please template tag?
-- Which existing signing certificate/alias and highest distributed versionCode must each app retain, and who may verify them?
-- Which devices may receive signed upgrade tests, including fz Home/default state and pull persisted sessions?
-- Migrate Obtainium feeds explicitly (recommended), or maintain old-repo compatibility releases; how long is the overlap?
-- Who approves the first per-app versions, pausing original publishers, and setting both destination release gate variables?
-- Approve retiring pull development before fz after the overlap, and is any later archive desired? Nothing authorizes archive or deletion now.
+- Which original certificate/alias and highest distributed versionCode must each app retain, and who may verify them?
+- Which test devices may receive signed upgrade tests, including fz Home/default state and pull sessions?
+- Migrate Obtainium feeds explicitly, or maintain old-repository compatibility releases; how long should feeds overlap?
+- Who approves first component versions, pausing original publishers and enabling destination release variables?
+- When may each original repository stop development? Any later archive needs separate approval; deletion is not proposed.
 
-This is a local reviewable pilot, not a published replacement for the existing repositories.
+## Completed source provisioning
 
-## Provenance
+`JakobMelchard/android` is private and contains both apps. The owner approved the names services, android and apple, repository creation, and using local checks to merge template PR77 and infra PR337 while hosted Actions is blocked by billing.
 
-Both source default-branch histories are parents of import commit d167341bd90b8f8b19aa8ec9c42de39c2ac932d5. The original application sources are moved, not rewritten. The initial import retains each original tree under apps/<name>, before build consolidation.
+Creation used the infrastructure/template path. A saved OpenTofu plan created only the private repository, two runner variables and standard security settings: five creates, no changes or deletions. Encrypted GitHub state advanced189 to190 and was committed immediately. Infra PR337 and template PR77 are merged. The provisioner completed its source import with local Terraform validation, full hooks and scaffold checks; it opened draft infra PR338 to remove the temporary `new:true` declaration flag. PR338 is not covered by the two-PR merge exception.
 
-- fz: 78ce62c93017b17b77f4d3a93b16f464c2582fbc; 6 source/resource/test files retained byte-for-byte.
-- pull: 9a4a415e116946830fcf510df096a6df2cfaf37e; 17 source/resource/test files retained byte-for-byte.
+The template render is pinned to commit1c641984047b9a9960d14b984283fdaad85b55f4. The preparation source is commitf75e0f24c6b8bd4eac3fa0a5f29f87214a649522 from the local consolidation pilot. The first scaffold commit is b0e94362df5093a238e177cc808b48ed4cfc991c. Template version tags must come from release-please; no tag was created by hand.
 
-No remote named origin exists. Source remotes point to local source clones and have blocked push URLs. Source repositories, remotes, installed applications and release channels are unchanged.
+Automatic releases are explicitly disabled with repository variable `ANDROID_RELEASE_ENABLED=false`. The first release workflow run was skipped. Existing source repositories, releases, Obtainium feeds and installed apps remain unchanged. Source import does not switch release authority.
 
-## Ownership and build
+## Provenance and build boundaries
 
-Each app owns its source, namespace, application ID, persistence, screenshots and changelog. Included build-logic owns common Android application/Compose/lint setup; a single version catalog and wrapper own build dependencies. Per-app editor conventions preserve the existing code formatting. The compiler/SDK baseline follows fz; pull retains its targetSDK and minSDK. No shared domain/UI abstraction was invented.
+Initial import commit d167341bd90b8f8b19aa8ec9c42de39c2ac932d5 retains both original histories as parents:
 
-The shared baseline is AGP9.4.1, Gradle9.8.2, Compose compiler2.4.21, Compose BOM2025.12.01, compileSDK36 and Java17. Preserve targetSDK35 and minSDK29 for both apps. Common catalog entries are versions to maintain together, not a mandate to publish both apps together.
+- fz:78ce62c93017b17b77f4d3a93b16f464c2582fbc, six source/resource/test files.
+- pull:9a4a415e116946830fcf510df096a6df2cfaf37e, seventeen source/resource/test files.
 
-## Verification
+All23 original application files remain byte-identical. Each app owns its namespace, application ID, persistence, screenshots and changelog. Shared build logic supplies Android/Compose/lint conventions; a single wrapper and catalog supply Gradle9.8.2, AGP9.4.1, Compose compiler2.4.21, compileSDK36 and Java17. Both apps retain minSDK29 and targetSDK35. No shared domain/UI library was introduced.
 
-Both original apps passed unit tests, debug APK build, ktlint and Android lint before migration. The shared build passes the same checks for both apps. Source hash, application ID and history ancestry checks passed after relocation. Separate version inputs are tested in actual debug APK metadata. The release helper has six regression cases for component task/version/keystore isolation, explicit alias retention, missing-key and invalid-input rejection, and key cleanup on failure. These tests use synthetic keystores and stub tools only.
+services retains workouts and its related mobile shells. Workspace clients remain with workspaces. apple is reserved for standalone macOS/iOS apps; no empty repository was created. Firmware stays outside these application collections. Shared workflows/configs belong to .github, scaffolding to template and resource declarations to infra.
 
-CI is one call of the pinned shared Android workflow at v2.5.0 with source-owned root `check` and both apps' tasks, so the required `ci / ci` and `ci / pr-title` names stay. The `hooks / prek` job and prek config arrive with the template scaffold commit. Local actionlint and shellcheck run before review. The component plan adds four test cases, including per-app/both/empty selection and malformed metadata rejection. Both debug builds, unit suites, ktlint and Android lint passed again on 2026-10-27. Hosted CI has not run for this unpublished repository. No signing secret was fetched; no production APK signing, device installation, Home-app replacement or signed upgrade test occurred.
+## Verified locally
 
-## Destination and provisioning plan
+The provisioned source passed both debug builds, fz47 and pull35 unit tests with no failures/errors/skips, root/app ktlint and Android lint. All121 generated build tasks executed. Eleven synthetic release tests and36 template tests pass. Hooks and actionlint pass. Both original histories and application IDs are retained;56 checked source-owned build/app/release files survived the overlay byte-for-byte. Hosted CI is still blocked by account billing, so no hosted green result is claimed.
 
-The owner approved the group names services, android and apple. Prepare `JakobMelchard/android` as private, retaining the existing apps' visibility. The name describes the shared native build while leaving fz and pull as independent products. It allows another Android app without another repository migration. Both existing repositories are private, verified through GitHub on 2026-10-27; preserve their access boundary, collaborators and release-reader access. Name availability and provisioner inventory validation remain cutover checks, not a claim that a destination exists.
+## Release and signing contract
 
-Provision only through template `scripts/new` and the infra declaration/apply path. Do not use `gh repo create`, workspace hooks or an ordinary clone to create the destination. The owner approved proceeding with the grouping after reviewing the architecture. Prepare the Android declaration through the provisioner as a draft infra PR. Merge, apply, real signing, device changes, release enablement and source retirement still need their specific gates. Dry-run command, using the draft template fix's immutable SHA:
+The release workflow pins shared release.yml at df18859960a81d988ca3c7498bdd6a2dc976fec9, v2.6.0. Before release-please can run, the ref must be main, `ANDROID_RELEASE_ENABLED` must be `true` and `ANDROID_RELEASE_REPOSITORY` must exactly match the repository. Enablement requires a separate publication decision.
 
-```sh
-/Users/j/Workspaces/JakobMelchard/template.tree/worktrees/fix/android-multi-checks/scripts/new android android \
-  -d 'Native Android applications: fz launcher and pull trainer' \
-  --owner JakobMelchard \
-  --source /Users/j/Workspaces/.staging/android-20261026 \
-  --answer android_layout=multi --answer android_apps=fz,pull \
-  --ref 1c641984047b9a9960d14b984283fdaad85b55f4 --dry-run
-```
+A read-only plan validates `paths_released` and the component `releases` map before selecting signing jobs. Only released apps are built, at their component tag, with `scripts/release-apk <app> <version>`. Tags are `fz-vX.Y.Z` and `pull-vX.Y.Z`; assets are `fz-X.Y.Z.apk` and `pull-X.Y.Z.apk`. A separate writable upload job runs no checkout or build code and receives no signing credentials or OIDC.
 
-Keep the source clean before running this command. No `--public` means private. The SHA contains multi layout, source check preservation and draft-only infrastructure PR creation; it is a draft PR pin, not an approved template release. Template draft PR: https://github.com/JakobMelchard/template/pull/77. As of 2026-10-27, latest template tag v0.3.3 predates multi. There is no open release-please PR. Release run 40475600555 never started because GitHub reports failed payments or a spending limit. After approved merge and restored hosted CI, use a release-please release containing this fix, verify the tag's resolved SHA, and repeat this dry run with that pin. Never tag by hand. The template's own non-Android workflow pins remain outside this change.
+Signing keeps the source workflows' Infisical identity, project, environment and non-recursive `/release` path. Existing `ANDROID_KEYSTORE_B64`/`ANDROID_KEYSTORE_PASSWORD`, plus optional alias/key password, map to the selected `FZ_*` or `PULL_*` helper inputs. No new GitHub signing secrets or copied keys are needed. Verify the destination OIDC binding and each app's original signing certificate/alias before enablement. No real signing key was read during source provisioning.
 
-The source owns root Gradle `check`, including root/app ktlint and Python release tests. The multi renderer and provisioning validator invoke `check`, then the listed app tasks. This avoids losing checks when generated CI replaces the pilot caller. The template retains one `ci` call, `ci / ci`, `ci / pr-title` and `hooks / prek`. It preserves the source Gradle build, signing ignores, release manifests and release workflow. The pinned dry run succeeded without creating a destination, operation state or infra branch. A disposable local Copier overlay retained all54 checked source-owned build/app/release files byte-for-byte and passed the generated Gradle CI tasks. Local Copier overlay validation is separate from provisioning. The approved next step is only the provisioner's declaration phase; it must stop at the draft infra PR until merge, apply and the final template release are available.
+Versions remain independent. Initial release manifests seed fz0.1.3 and pull0.1.6. Keep major*10000+minor*100+patch versionCode with minor/patch below100; compare every next release against the highest versionCode actually distributed for that app. A shared build change checks both apps and does not imply publishing both.
 
-## Component release source, disabled until approved
+## Device and Obtainium continuity
 
-`.github/workflows/release.yml` calls the released shared workflow at df18859960a81d988ca3c7498bdd6a2dc976fec9, v2.6.0. Every run is blocked before release-please unless the ref is main, `ANDROID_RELEASE_ENABLED` is exactly `true`, and `ANDROID_RELEASE_REPOSITORY` exactly matches `github.repository`. Leave both variables unset through provisioning and review. Setting them is a future explicit publication authorization, not part of this pilot.
+Keep `io.lilfeelz.fz` and `io.jakobmelchard.pull`, their existing private signing keys and aliases, and increasing versionCodes. After explicit device authorization, upgrade an original signed installation in place and verify fz launcher state/default Home choice and pull sessions/settings/BLE behavior. Do not uninstall or reset data. Debug/JVM/synthetic tests cannot establish signed-device continuity.
 
-The read-only plan job consumes `releases_created`, `paths_released` and the `releases` JSON map. It rejects unknown components, mismatched/duplicate paths, invalid versions and mismatched tags before selecting any signing job. Only released apps enter the matrix. Each APK job checks out its component tag and calls `scripts/release-apk <app> <version>`. Tags are `fz-vX.Y.Z` and `pull-vX.Y.Z`; assets remain `fz-X.Y.Z.apk` and `pull-X.Y.Z.apk`. A separate writable job uploads exactly that component's asset and runs no checkout or build code. Signing jobs have read-only repository permission and OIDC only to retain the existing Infisical authentication. The release-please job also uses the platform's app/OIDC contract; writable upload jobs have no OIDC. If signing/upload fails after a release is created, use GitHub's rerun-failed-jobs path to retain the successful release outputs; inspect missing assets before any full workflow restart.
+Keep both original repository URLs and historical APKs available. A new repository does not redirect either Obtainium feed. Recommend explicit feed migration with an overlap period; compatibility releases in the old repositories are an alternative requiring separately approved publishing. Compatibility APKs must be byte-identical, with one release authority rather than competing versionCodes.
 
-Keep the source workflows' existing Infisical identity, project, environment and non-recursive `/release` path. Adapt `ANDROID_KEYSTORE_B64` and `ANDROID_KEYSTORE_PASSWORD`, plus optional `ANDROID_KEY_ALIAS`/`ANDROID_KEY_PASSWORD`, to only the selected helper prefix, `FZ_*` or `PULL_*`. Both original workflows request this same store path and names; no new GitHub signing secrets or secret copies are introduced. Confirm each original app's certificate and alias before release enablement. Any later tightening of Infisical paths is a separate store-policy change, not a requirement of repository grouping. No key or secret has been fetched or moved.
+Export each user's current Obtainium configuration before changing it. The destination needs per-component release filtering and exact APK filtering, for example `^fz-[0-9]+\.[0-9]+\.[0-9]+\.apk$` and corresponding pull. Inspect actual release titles when configuring title filters; do not assume titles equal tags. Verify that publishing one app does not hide the other's latest APK. Test private-repository access, version extraction and an in-place update before distributing the new feed configuration. See the [Obtainium source documentation](https://wiki.obtainium.imranr.dev/sources/).
 
-App-local conventional commits advance only their component. Inspect the first release PRs and selected `paths_released` before approval. Current seeds are fz0.1.3 and pull0.1.6, matching latest original releases verified on 2026-10-27. Shared build changes must check both apps; if both need a release, add explicit component changelog/release entries in their release PRs. A shared change alone must not silently synchronize their versions.
+## Cutover and rollback, not executed
 
-## Signing identity and upgrade continuity
+1. Verify certificates, highest versionCodes, approved-device upgrades and feed overlap.
+2. Before enabling the destination publisher, pause original automatic publishers under explicit approval. Preserve original downloads and the chosen compatibility-feed path.
+3. Approve each first component release, verify its signed APK and feed, then observe the owner-chosen overlap period.
+4. Retire pull development first after its checks pass; retain fz until launcher/Home continuity is proven. Each original remains readable and unarchived unless the owner later approves otherwise.
 
-For each app, inventory the installed production versionCode and SHA-256 signing certificate from an owner-approved existing release APK or device. Public certificates and metadata are sufficient for comparison; do not expose private keys or passwords. Reuse the exact existing private key and alias. Base64 encoding a different key or generating a replacement breaks upgrade continuity. If the keystore has multiple aliases, configure the existing alias explicitly; the helper refuses ambiguous discovery. Preserve a distinct key password where the original uses one.
-
-Keep `io.lilfeelz.fz` and `io.jakobmelchard.pull`, minSDK29, targetSDK35, namespaces and persistence unchanged. Keep the injective major*10000+minor*100+patch versionCode calculation with minor/patch below100. Before the first release, compare the proposed code to the highest distributed/installed code for that app, not only manifest seeds103/106. The next code must be greater. A release uploaded under a new repository URL can upgrade the same package in place when its signing identity and versionCode are compatible. No uninstall or data reset belongs in this plan.
-
-After separate owner authorization, on identified test devices install the old signed release, record fz launcher state/default Home choice and pull sessions/settings, then upgrade to the new signed APK in place. Verify package IDs, certificate digests, increasing versionCode and retained data. Confirm fz remains a usable Home app and pull retains sessions and BLE behavior. Do not replace the owner's Home app or install anything during this pilot. Local debug/JVM/synthetic tests cannot establish signed device continuity.
-
-## Obtainium feed continuity
-
-Keep both original URLs, tags and APK downloads available: `JakobMelchard/fz` and `JakobMelchard/pull`. A new monorepo does not redirect either old feed. Recommend explicit feed migration with an overlap period; an alternative is owner-approved compatibility releases in each old repository, containing byte-identical APKs from the new component release. Choose one before first publication. Do not rebuild or re-sign compatibility assets, and do not let two independent release paths mint competing versionCodes.
-
-Before moving any tracked app, export its Obtainium configuration and check private-repository reader access. Test two separately configured app entries against the destination: component release filtering plus exact APK filtering (`^fz-[0-9]+\.[0-9]+\.[0-9]+\.apk$` and the corresponding pull regex). Component tag patterns are `^fz-v[0-9]+\.[0-9]+\.[0-9]+$` and corresponding pull. Obtainium's release-title filter matches titles, so inspect the actual release-please title and configure it accordingly; do not assume tag and title are identical. Disable repository-wide latest-tag selection if it selects the sibling app. Demonstrate that an fz-only release never hides pull's latest APK, and vice versa. Test version extraction and one in-place update per app before distributing the new configuration. The current [Obtainium source documentation](https://wiki.obtainium.imranr.dev/sources/) describes release/APK filters and latest-tag behavior; final configuration still needs device validation.
-
-A compatibility-feed strategy requires a separate approved implementation and publishing credential scope. Explicit migration requires confirmed feed updates by every affected user. Neither strategy is implemented or executed here. Preserve old releases indefinitely unless the owner later authorizes otherwise.
-
-## Cutover and source retirement order, not executed
-
-1. Owner settles every question above. Restore hosted CI, review template PR and obtain its release-please release. Verify the final template pin and repeat dry-run/overlay checks with a clean pilot.
-2. After explicit provisioning authorization, declare the private destination through `scripts/new`; owner reviews infra PR, merges and runs apply. Provisioner waits for an empty destination and overlays the approved source history. Inspect access, scaffold, release gate variables (unset), required checks and history ancestry before any publication. No merge or apply is authorized now.
-3. With separate secret-handling authorization, verify the existing Infisical OIDC binding permits the new destination and the original signing identities are retained. Compare certificates without exposing keys. Verify the approved signed device upgrades and Obtainium overlap plan. Record per-app highest distributed versionCode.
-4. With explicit publication approval, establish one release authority: pause both original automatic release paths before enabling destination variables. Keep source downloads, repository access and the agreed compatibility feed path working. Approve each first component release PR and validate the APK, certificate and feed before promoting it to users. Nothing here approves those merges or publication.
-5. Observe both app feeds and upgrades for an owner-chosen overlap period. Original repositories remain readable and unarchived. Announce the new source of development only after users can update reliably. Update inventory/ownership/docs in a separately approved cutover task.
-6. Recommend retiring pull development first once its sessions/upgrades/feed pass, then fz after launcher/Home continuity is proven. The launcher carries the higher device-availability risk. Retire each only after its users have migrated or compatibility publishing has been verified. Disable redundant automation before considering archive. Archive requires fresh owner approval; deletion is not proposed. Keep both histories, releases, original tags and source remotes.
-
-Rollback: before destination publication, leave original automation authoritative and destination variables unset. After publication, disable destination release enablement first, then restore one explicitly approved original publisher. Never lower versionCode: rebuild any fix with the same app signing identity and a code above every version already distributed. Restore the previous Obtainium configuration only if its feed can deliver a compatible newer APK. Preserve user data; uninstall/reinstall and blind APK downgrade are not rollback steps.
-
-## Grouping boundaries
-
-services already holds lists, workouts and their related shells. Keep those parts together. The Android collection starts with the standalone native fz and pull apps. apple is reserved for standalone macOS/iOS apps; current Apple applications belong to workspaces or workouts, so no empty Apple repository is needed. Firmware, including the physical TOTEM keyboard, stays outside these application collections. Shared workflows/configs remain in .github, scaffolding in template and resource declarations in infra.
-
-## Out of scope
-
-attach remains with workspaces and its shared Swift/SSH/iPad code. Workouts and offline routine viewer stay in services pending an online/offline product contract. Content recovery has its own Paseo session. No app feature work or app retirement is part of this build consolidation.
+Before publication, rollback means retaining the original release authority and leaving the destination disabled. After publication, disable destination publishing first, then restore one approved original publisher. Any rollback build needs the same signing identity and a code above every distributed version. Preserve data; uninstall/reinstall and blind APK downgrade are not rollback procedures.

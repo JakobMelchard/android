@@ -12,7 +12,7 @@
 
 `JakobMelchard/android` is private and contains both apps. The owner approved the names services, android and apple, repository creation, and using local checks to merge template PR77 and infra PR337 while hosted Actions is blocked by billing.
 
-Creation used the infrastructure/template path. A saved OpenTofu plan created only the private repository, two runner variables and standard security settings: five creates, no changes or deletions. Encrypted GitHub state advanced189 to190 and was committed immediately. Infra PR337 and template PR77 are merged. The provisioner completed its source import with local Terraform validation, full hooks and scaffold checks; it opened draft infra PR338 to remove the temporary `new:true` declaration flag. PR338 is not covered by the two-PR merge exception.
+Creation used the infrastructure/template path. A saved OpenTofu plan created only the private repository, two runner variables and standard security settings: five creates, no changes or deletions. Encrypted GitHub state advanced189 to190 and was committed immediately. Infra PR337 and template PR77 are merged. The provisioner completed its source import with local Terraform validation, full hooks and scaffold checks. Housekeeping infra PR338 removed the temporary `new:true` declaration flag after a separate owner-approved local-check exception. Repository provisioning and its bookkeeping are complete.
 
 The template render is pinned to commit1c641984047b9a9960d14b984283fdaad85b55f4. The preparation source is commitf75e0f24c6b8bd4eac3fa0a5f29f87214a649522 from the local consolidation pilot. The first scaffold commit is b0e94362df5093a238e177cc808b48ed4cfc991c. Template version tags must come from release-please; no tag was created by hand.
 

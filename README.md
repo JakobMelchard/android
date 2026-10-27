@@ -16,8 +16,8 @@ make check APP=pull
 
 Root Gradle `check` includes ktlint and Python release-contract tests. Each app keeps its own application code, version, signing identity and data. Both retain minSDK29 and targetSDK35. Version properties are scoped, for example `-Pfz.versionName=0.1.3 -Pfz.versionCode=103` and corresponding `pull.*` properties.
 
-Source import is complete. Automatic releases are disabled with `ANDROID_RELEASE_ENABLED=false`. Existing releases and Obtainium feeds in `JakobMelchard/fz` and `JakobMelchard/pull` remain active until a separately approved cutover. No device installation or Home-app replacement runs automatically.
+Releases are built and signed here. Component tags are `fz-vX.Y.Z` and `pull-vX.Y.Z`. Existing Obtainium subscriptions stay on `JakobMelchard/fz` and `JakobMelchard/pull`: those repositories receive the identical verified APK and no longer build releases themselves.
 
-Signing retains the existing Infisical inputs and maps them to the selected app's `FZ_*` or `PULL_*` helper inputs. Signing certificates and in-place upgrades still need verification before enabling releases.
+The first migrated releases are fz0.1.4/code104 and pull0.1.7/code107. Both retain the original application IDs and signing certificate. No device installation or Home-app replacement runs automatically.
 
-See [MIGRATION.md](MIGRATION.md) for provenance, completed provisioning and remaining cutover gates.
+See [MIGRATION.md](MIGRATION.md) for provenance, executed cutover and verification.

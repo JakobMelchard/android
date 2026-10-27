@@ -51,3 +51,5 @@ Switch the scale on, open the app and allow Bluetooth and location; it locks ont
 ## License
 
 [MIT](LICENSE)
+
+Development and signed builds now live in `JakobMelchard/android`, under `apps/pull`. Existing Obtainium subscriptions stay on `https://github.com/JakobMelchard/pull`; releases there mirror the exact canonical APK.

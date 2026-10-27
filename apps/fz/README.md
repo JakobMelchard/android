@@ -17,3 +17,5 @@ Releases carry a signed `fz-<version>.apk`; add `https://github.com/JakobMelchar
 | `src/main/java/io/lilfeelz/fz/MainActivity.kt` | app list, fuzzy match, frecency, UI |
 | `src/main/java/io/lilfeelz/fz/Tokens.kt` | org design tokens |
 | `src/test/` | unit tests for the fuzzy match, frecency and ranking |
+
+Development and signed builds now live in `JakobMelchard/android`, under `apps/fz`. Existing Obtainium subscriptions stay on `https://github.com/JakobMelchard/fz`; releases there mirror the exact canonical APK.

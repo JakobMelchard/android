@@ -14,5 +14,6 @@
       "component": "pull",
       "include-component-in-tag": true
     }
-  }
+  },
+  "draft-pull-request": true
 }

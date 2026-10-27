@@ -1,24 +1,23 @@
 name: ci
 
-on:
-  pull_request:
-  push:
-    branches: [main]
-  workflow_dispatch:
-
 permissions:
   contents: read
 
+on:
+  push:
+    branches: [main]
+  pull_request:
+
 jobs:
-  # One call for both apps keeps the required check names (ci / ci, ci / pr-title).
+  # One call for all apps keeps the required check names (ci / ci, ci / pr-title). The source owns the Gradle build and SDK.
   ci:
-    uses: JakobMelchard/.github/.github/workflows/android.yml@f0d18d59dc51bf3c06ce4747ec91f6a4b7c208c9 # v2.5.0
+    uses: JakobMelchard/.github/.github/workflows/android.yml@531b4dcb30293e6219d67e312e164cc262a69955 # v2.3.1
     with:
-      java-version: "17"
-      android-packages: platforms;android-36 build-tools;36.0.0
       gradle-tasks: >-
         check
         :apps:fz:testDebugUnitTest :apps:fz:lintDebug :apps:fz:assembleDebug
         :apps:pull:testDebugUnitTest :apps:pull:lintDebug :apps:pull:assembleDebug
-      artifact-name: debug-apks
       artifact-path: apps/*/build/outputs/apk/debug/*.apk
+
+  hooks:
+    uses: JakobMelchard/.github/.github/workflows/hooks.yml@531b4dcb30293e6219d67e312e164cc262a69955 # v2.3.1

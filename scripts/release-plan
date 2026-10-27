@@ -6,8 +6,14 @@ import re
 import sys
 
 try:
-    paths = json.loads(os.environ["PATHS_RELEASED"])
-    releases = json.loads(os.environ["RELEASES"])
+    retry = os.environ.get("RETRY_APP", "auto")
+    if retry != "auto":
+        paths = [f"apps/{retry}"]
+        version = os.environ.get("RETRY_VERSION", "")
+        releases = {paths[0]: {"version": version, "tag_name": f"{retry}-v{version}"}}
+    else:
+        paths = json.loads(os.environ["PATHS_RELEASED"])
+        releases = json.loads(os.environ["RELEASES"])
     if not isinstance(paths, list) or not isinstance(releases, dict):
         raise ValueError("expected paths array and releases object")
     if any(not isinstance(path, str) for path in paths):

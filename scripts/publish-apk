@@ -1,0 +1,88 @@
+#!/usr/bin/env python3
+"""Publish a verified component APK and mirror identical bytes for existing Obtainium feeds."""
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
+import tempfile
+
+CERT = 'd3f7764e66bd5041c2afdc71dca287f88008ab0ddb48aa5750c66270f7f429fd'
+APPS = {
+    'fz': ('io.lilfeelz.fz', 103, '78ce62c93017b17b77f4d3a93b16f464c2582fbc'),
+    'pull': ('io.jakobmelchard.pull', 106, '9a4a415e116946830fcf510df096a6df2cfaf37e'),
+}
+
+
+def validate(app, version):
+    if app not in APPS or not re.fullmatch(r'(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)', version):
+        raise ValueError('expected fz|pull and x.y.z with minor/patch below 100')
+    major, minor, patch = map(int, version.split('.'))
+    code = major * 10000 + minor * 100 + patch
+    if not APPS[app][1] < code <= 2100000000:
+        raise ValueError('versionCode must exceed the original distributed app')
+    return code
+
+
+def gh(*args):
+    result = subprocess.check_output([os.environ.get('GH_BIN', 'gh'), *args], text=True, timeout=120)
+    return json.loads(result) if args[0] == 'api' else result
+
+
+def upload(repo, tag, apk, digest):
+    release = gh('api', f'repos/{repo}/releases/tags/{tag}')
+    if release.get('draft') or release.get('prerelease'):
+        raise ValueError('canonical and compatibility releases must be published stable releases')
+    assets = [a for a in release['assets'] if a['name'] == apk.name]
+    if assets:
+        asset_digest = assets[0].get('digest')
+        if not asset_digest:
+            with tempfile.TemporaryDirectory() as temp:
+                gh('release', 'download', tag, '--repo', repo, '--pattern', apk.name, '--dir', temp)
+                asset_digest = 'sha256:' + hashlib.sha256((Path(temp) / apk.name).read_bytes()).hexdigest()
+        if asset_digest != 'sha256:' + digest:
+            raise ValueError(f'{repo} {tag}: existing APK differs; refusing overwrite')
+        return
+    gh('release', 'upload', tag, str(apk), '--repo', repo)
+
+
+def main():
+    if len(sys.argv) != 4:
+        raise ValueError('usage: publish-apk <fz|pull> <x.y.z> <apk>')
+    app, version, filename = sys.argv[1:]
+    code = validate(app, version)
+    apk = Path(filename).resolve()
+    if apk.name != f'{app}-{version}.apk':
+        raise ValueError('APK filename does not match selected component/version')
+    tools = Path(os.environ['ANDROID_HOME']) / 'build-tools/36.0.0'
+    cert = subprocess.check_output([str(tools / 'apksigner'), 'verify', '--print-certs', str(apk)], text=True, timeout=30)
+    fingerprints = re.findall(r'certificate SHA-256 digest: (\w+)', cert)
+    if fingerprints != [CERT]:
+        raise ValueError('APK does not retain the original signing certificate')
+    meta = subprocess.check_output([str(tools / 'aapt'), 'dump', 'badging', str(apk)], text=True, timeout=30).splitlines()[0]
+    if any(value not in meta for value in [f"name='{APPS[app][0]}'", f"versionCode='{code}'", f"versionName='{version}'"]):
+        raise ValueError('APK identity or version does not match the release')
+    digest = hashlib.sha256(apk.read_bytes()).hexdigest()
+    tag = f'{app}-v{version}'
+    canonical = 'JakobMelchard/android'
+    upload(canonical, tag, apk, digest)
+    legacy = f'JakobMelchard/{app}'
+    # Only a confirmed 404 permits creation; auth/network errors must stop publication.
+    existing = gh('api', f'repos/{legacy}/releases?per_page=100')
+    if not any(r['tag_name'] == f'v{version}' for r in existing):
+        notes = f'Compatibility download from https://github.com/{canonical}/releases/tag/{tag}\n\nBuilt and signed once in {canonical}; SHA256 {digest}. Development moved to {canonical}. This repository preserves existing Obtainium URLs.\n'
+        with tempfile.NamedTemporaryFile(mode='w', suffix='.md') as body:
+            body.write(notes)
+            body.flush()
+            gh('release', 'create', f'v{version}', '--repo', legacy, '--target', APPS[app][2], '--title', f'v{version}', '--notes-file', body.name)
+    upload(legacy, f'v{version}', apk, digest)
+    print(f'{app} {version}: canonical and compatibility APKs verified, sha256 {digest}')
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except (ValueError, subprocess.CalledProcessError) as error:
+        raise SystemExit(str(error)) from error

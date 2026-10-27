@@ -1,5 +1,14 @@
 # Android migration
 
+## Release handover
+
+The owner requested completing distribution. Signed candidates fz0.1.4/code104 and pull0.1.7/code107 retain their original IDs and certificate SHA256 d3f7764e66bd5041c2afdc71dca287f88008ab0ddb48aa5750c66270f7f429fd. No device installation was performed. The publisher verifies these properties and refuses to replace existing APK bytes. It publishes the canonical component release, then mirrors identical downloads to the original repositories so existing Obtainium URLs continue working. Development and signing have one authority.
+
+Release jobs use RUNNER_MACOS because hosted Actions is blocked by billing. Manual dispatch can retry an existing component release without incrementing its version. The compatibility publisher gets a short-lived app token restricted to android and the selected original repository; signing credentials stay in the separate build job.
+
+The historical preparation record below describes earlier gates; actual cutover status is recorded after execution.
+
+
 ## Remaining owner decisions
 
 - Which original certificate/alias and highest distributed versionCode must each app retain, and who may verify them?

@@ -64,3 +64,15 @@ class ReleasePlanTest(unittest.TestCase):
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(result.stdout, "")
+
+    def test_retry_builds_only_a_valid_existing_component_tag(self):
+        for app in ("fz", "pull"):
+            result = subprocess.run(
+                ["python3", str(Path(__file__).with_name("release-plan"))],
+                env={**os.environ, "RETRY_APP": app, "RETRY_VERSION": "0.1.9"}, capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(
+                json.loads(result.stdout)["include"],
+                [{"app": app, "prefix": app.upper(), "tag_name": app + "-v0.1.9", "version": "0.1.9"}],
+            )

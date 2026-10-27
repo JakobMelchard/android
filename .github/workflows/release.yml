@@ -1,0 +1,118 @@
+name: release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # Owner sets BOTH variables only after provisioning and approving cutover.
+    # An unset destination never matches, including in this local pilot or source repos.
+    if: >-
+      github.ref == 'refs/heads/main' &&
+      vars.ANDROID_RELEASE_ENABLED == 'true' &&
+      vars.ANDROID_RELEASE_REPOSITORY == github.repository
+    uses: JakobMelchard/.github/.github/workflows/release.yml@df18859960a81d988ca3c7498bdd6a2dc976fec9 # v2.6.0
+    permissions:
+      contents: read
+      id-token: write
+
+  plan:
+    needs: release
+    if: needs.release.outputs.releases_created == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: plan
+        env:
+          PATHS_RELEASED: ${{ needs.release.outputs.paths_released }}
+          RELEASES: ${{ needs.release.outputs.releases }}
+        run: |
+          matrix=$(python3 scripts/release-plan)
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  apk:
+    needs: plan
+    if: needs.plan.outputs.matrix != '{"include":[]}'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ matrix.tag_name }}
+          persist-credentials: false
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@be39fa834029ff78f1a44aa3bb0819b8fc2bd8fd # v4.0.4
+        with:
+          packages: platforms;android-36 build-tools;36.0.0
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+      - name: build selected component
+        env:
+          APP: ${{ matrix.app }}
+          VERSION: ${{ matrix.version }}
+          # Only the selected component's credentials enter this process.
+          KEYSTORE_B64: ${{ secrets[format('{0}_KEYSTORE_B64', matrix.prefix)] }}
+          KEYSTORE_PASSWORD: ${{ secrets[format('{0}_KEYSTORE_PASSWORD', matrix.prefix)] }}
+          KEY_ALIAS: ${{ secrets[format('{0}_KEY_ALIAS', matrix.prefix)] }}
+          KEY_PASSWORD: ${{ secrets[format('{0}_KEY_PASSWORD', matrix.prefix)] }}
+        run: |
+          prefix=${APP^^}
+          export "${prefix}_KEYSTORE_B64=$KEYSTORE_B64"
+          export "${prefix}_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+          export "${prefix}_KEY_ALIAS=$KEY_ALIAS"
+          if [ -n "$KEY_PASSWORD" ]; then export "${prefix}_KEY_PASSWORD=$KEY_PASSWORD"; fi
+          unset KEYSTORE_B64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD
+          scripts/release-apk "$APP" "$VERSION"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: apk-${{ matrix.app }}-${{ matrix.version }}
+          path: ${{ matrix.app }}-${{ matrix.version }}.apk
+          if-no-files-found: error
+          retention-days: 1
+
+  # No checkout, Gradle, signing credentials or OIDC in the writable job.
+  upload:
+    needs: [plan, apk]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: apk-${{ matrix.app }}-${{ matrix.version }}
+      - name: upload selected APK
+        env:
+          GH_TOKEN: ${{ github.token }}
+          APP: ${{ matrix.app }}
+          VERSION: ${{ matrix.version }}
+          TAG: ${{ matrix.tag_name }}
+        run: gh release upload "$TAG" "$APP-$VERSION.apk" --clobber --repo "$GITHUB_REPOSITORY"

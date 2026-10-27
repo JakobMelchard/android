@@ -1,0 +1,66 @@
+import json
+import os
+from pathlib import Path
+import subprocess
+import unittest
+
+
+class ReleasePlanTest(unittest.TestCase):
+    def plan(self, paths, releases):
+        return subprocess.run(
+            ["python3", str(Path(__file__).with_name("release-plan"))],
+            env={**os.environ, "PATHS_RELEASED": json.dumps(paths), "RELEASES": json.dumps(releases)},
+            capture_output=True,
+            text=True,
+        )
+
+    def test_no_release(self):
+        result = self.plan([], {})
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {"include": []})
+
+    def test_each_component_and_both_select_only_their_own_metadata(self):
+        for apps in (("fz",), ("pull",), ("fz", "pull")):
+            with self.subTest(apps=apps):
+                releases = {
+                    f"apps/{app}": {"tag_name": f"{app}-v1.2.{i}", "version": f"1.2.{i}"}
+                    for i, app in enumerate(apps)
+                }
+                result = self.plan(list(releases), releases)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(
+                    json.loads(result.stdout)["include"],
+                    [
+                        {"app": app, "prefix": app.upper(), **releases[f"apps/{app}"]}
+                        for app in apps
+                    ],
+                )
+
+    def test_inconsistent_unknown_or_unsafe_metadata_fails_closed(self):
+        valid = {"tag_name": "fz-v1.2.3", "version": "1.2.3"}
+        cases = [
+            (["."], {".": valid}),
+            (["apps/fz"], {}),
+            ([], {"apps/fz": valid}),
+            (["apps/fz", "apps/fz"], {"apps/fz": valid}),
+            ({"apps/fz": valid}, {"apps/fz": valid}),
+            ([1], {}),
+            (["apps/fz"], {"apps/fz": None}),
+            (["apps/fz"], {"apps/fz": {"tag_name": "pull-v1.2.3", "version": "1.2.3"}}),
+        ]
+        for version in ("01.2.3", "1.100.0", "1.0.100", "210001.0.0", "1.2.3;echo bad", "1.2.3\n", 123):
+            cases.append((["apps/fz"], {"apps/fz": {"tag_name": f"fz-v{version}", "version": version}}))
+        for paths, releases in cases:
+            with self.subTest(paths=paths, releases=releases):
+                result = self.plan(paths, releases)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertEqual(result.stdout, "")
+
+    def test_malformed_json_rejected(self):
+        result = subprocess.run(
+            ["python3", str(Path(__file__).with_name("release-plan"))],
+            env={**os.environ, "PATHS_RELEASED": "[", "RELEASES": "{}"},
+            capture_output=True, text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")

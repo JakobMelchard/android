@@ -1,0 +1,39 @@
+#!/usr/bin/env python3
+"""Validate the platform component outputs before selecting signing jobs."""
+import json
+import os
+import re
+import sys
+
+try:
+    paths = json.loads(os.environ["PATHS_RELEASED"])
+    releases = json.loads(os.environ["RELEASES"])
+    if not isinstance(paths, list) or not isinstance(releases, dict):
+        raise ValueError("expected paths array and releases object")
+    if any(not isinstance(path, str) for path in paths):
+        raise ValueError("paths must be strings")
+    if len(set(paths)) != len(paths) or set(paths) != set(releases):
+        raise ValueError("paths and release metadata must agree without duplicates")
+    include = []
+    for path in paths:
+        if path not in ("apps/fz", "apps/pull"):
+            raise ValueError("unknown release component")
+        app = path.split("/")[1]
+        release = releases[path]
+        if not isinstance(release, dict):
+            raise ValueError("expected component release metadata")
+        version = release.get("version")
+        if not isinstance(version, str) or not re.fullmatch(
+            r"(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)", version
+        ):
+            raise ValueError("invalid Android version")
+        major, minor, patch = map(int, version.split("."))
+        if major * 10000 + minor * 100 + patch > 2100000000:
+            raise ValueError("versionCode exceeds Android's limit")
+        tag = release.get("tag_name")
+        if tag != f"{app}-v{version}":
+            raise ValueError("component tag does not match its version")
+        include.append({"app": app, "prefix": app.upper(), "tag_name": tag, "version": version})
+    print(json.dumps({"include": include}, separators=(",", ":")))
+except (KeyError, ValueError, TypeError) as error:
+    sys.exit(f"release-plan: {error}")

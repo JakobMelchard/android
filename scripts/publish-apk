@@ -27,8 +27,8 @@ def validate(app, version):
 
 
 def gh(*args):
-    result = subprocess.check_output([os.environ.get('GH_BIN', 'gh'), *args], text=True, timeout=120)
-    return json.loads(result) if args[0] == 'api' else result
+    result = subprocess.run([os.environ.get('GH_BIN', 'gh'), *args], capture_output=True, text=True, timeout=120, check=True)
+    return json.loads(result.stdout) if args[0] == 'api' else result.stdout
 
 
 def upload(repo, tag, apk, digest):
@@ -70,8 +70,11 @@ def main():
     upload(canonical, tag, apk, digest)
     legacy = f'JakobMelchard/{app}'
     # Only a confirmed 404 permits creation; auth/network errors must stop publication.
-    existing = gh('api', f'repos/{legacy}/releases?per_page=100')
-    if not any(r['tag_name'] == f'v{version}' for r in existing):
+    try:
+        gh('api', f'repos/{legacy}/releases/tags/v{version}')
+    except subprocess.CalledProcessError as error:
+        if 'HTTP 404' not in (error.stderr or ''):
+            raise
         notes = f'Compatibility download from https://github.com/{canonical}/releases/tag/{tag}\n\nBuilt and signed once in {canonical}; SHA256 {digest}. Development moved to {canonical}. This repository preserves existing Obtainium URLs.\n'
         with tempfile.NamedTemporaryFile(mode='w', suffix='.md') as body:
             body.write(notes)

@@ -14,12 +14,11 @@ jobs:
   ci:
     uses: JakobMelchard/.github/.github/workflows/android.yml@f0d18d59dc51bf3c06ce4747ec91f6a4b7c208c9 # v2.5.0
     with:
-      setup-cmd: python3 -m unittest discover -s scripts -p 'test_*.py'
       java-version: "17"
       android-packages: platforms;android-36 build-tools;36.0.0
       gradle-tasks: >-
-        ktlintCheck
-        :apps:fz:ktlintCheck :apps:fz:testDebugUnitTest :apps:fz:lintDebug :apps:fz:assembleDebug
-        :apps:pull:ktlintCheck :apps:pull:testDebugUnitTest :apps:pull:lintDebug :apps:pull:assembleDebug
+        check
+        :apps:fz:testDebugUnitTest :apps:fz:lintDebug :apps:fz:assembleDebug
+        :apps:pull:testDebugUnitTest :apps:pull:lintDebug :apps:pull:assembleDebug
       artifact-name: debug-apks
       artifact-path: apps/*/build/outputs/apk/debug/*.apk

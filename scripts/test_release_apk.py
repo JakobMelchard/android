@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+import textwrap
 import unittest
 
 
@@ -52,6 +53,27 @@ out.mkdir(parents=True)
                 self.assertEqual(record["alias"], "upload")
                 self.assertFalse(Path(record["path"]).exists())
                 self.assertTrue((self.root / f"{app}-1.2.3.apk").exists())
+
+    def test_workflow_maps_existing_infisical_credentials_to_each_component(self):
+        workflow = Path(__file__).parent.parent / ".github/workflows/release.yml"
+        build = workflow.read_text().split("      - name: build selected component\n", 1)[1]
+        command = build.split("        run: |\n", 1)[1].split("      - uses:", 1)[0]
+        command = textwrap.dedent(command)
+        for app in ("fz", "pull"):
+            with self.subTest(app=app):
+                env = {k: v for k, v in self.env.items() if not k.startswith(("FZ_", "PULL_", "ANDROID_"))}
+                env.update({
+                    "APP": app, "VERSION": "1.2.3", "TEST_APP": app,
+                    "ANDROID_KEYSTORE_B64": base64.b64encode((app + "-original-key").encode()).decode(),
+                    "ANDROID_KEYSTORE_PASSWORD": "test-password", "ANDROID_KEY_ALIAS": app + "-original-alias",
+                })
+                result = subprocess.run(["bash", "-euc", command], cwd=self.root, env=env, capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                record = json.loads((self.root / "record.json").read_text())
+                self.assertEqual(record["key"], app + "-original-key")
+                self.assertEqual(record["alias"], app + "-original-alias")
+                self.assertEqual(record["args"][1], f":apps:{app}:assembleRelease")
+                self.assertFalse(Path(record["path"]).exists())
 
     def test_explicit_alias_is_retained(self):
         result = self.release(PULL_KEY_ALIAS="unused", FZ_KEY_ALIAS="existing-fz")

@@ -52,6 +52,7 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      id-token: write
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
@@ -71,22 +72,28 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-provider: basic
+      - uses: Infisical/secrets-action@d2e351f16c6ca20d17c85e6c992e04bdeb64e87d # v1.0.18
+        with:
+          method: oidc
+          identity-id: b1ede60d-f7a7-4699-86ec-eea6ac51be30 # gha-org
+          domain: https://eu.infisical.com
+          project-slug: gha-lfq-y
+          env-slug: dev
+          secret-path: /release
+          recursive: false
       - name: build selected component
         env:
           APP: ${{ matrix.app }}
           VERSION: ${{ matrix.version }}
-          # Only the selected component's credentials enter this process.
-          KEYSTORE_B64: ${{ secrets[format('{0}_KEYSTORE_B64', matrix.prefix)] }}
-          KEYSTORE_PASSWORD: ${{ secrets[format('{0}_KEYSTORE_PASSWORD', matrix.prefix)] }}
-          KEY_ALIAS: ${{ secrets[format('{0}_KEY_ALIAS', matrix.prefix)] }}
-          KEY_PASSWORD: ${{ secrets[format('{0}_KEY_PASSWORD', matrix.prefix)] }}
         run: |
-          prefix=${APP^^}
-          export "${prefix}_KEYSTORE_B64=$KEYSTORE_B64"
-          export "${prefix}_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
-          export "${prefix}_KEY_ALIAS=$KEY_ALIAS"
-          if [ -n "$KEY_PASSWORD" ]; then export "${prefix}_KEY_PASSWORD=$KEY_PASSWORD"; fi
-          unset KEYSTORE_B64 KEYSTORE_PASSWORD KEY_ALIAS KEY_PASSWORD
+          prefix=$(printf '%s' "$APP" | tr '[:lower:]' '[:upper:]')
+          export "${prefix}_KEYSTORE_B64=$ANDROID_KEYSTORE_B64"
+          export "${prefix}_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD"
+          export "${prefix}_KEY_ALIAS=${ANDROID_KEY_ALIAS:-}"
+          if [ -n "${ANDROID_KEY_PASSWORD:-}" ]; then
+            export "${prefix}_KEY_PASSWORD=$ANDROID_KEY_PASSWORD"
+          fi
+          unset ANDROID_KEYSTORE_B64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD
           scripts/release-apk "$APP" "$VERSION"
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

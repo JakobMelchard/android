@@ -38,3 +38,8 @@ class PublishTest(unittest.TestCase):
             with self.assertRaises(subprocess.CalledProcessError):
                 self.module.upload('JakobMelchard/android', 'fz-v0.1.4', Path('fz-0.1.4.apk'), 'abc')
             self.assertEqual(gh.call_count, 1)
+
+    def test_retry_cannot_make_an_older_version_the_feed_latest(self):
+        with self.assertRaises(ValueError):
+            self.module.validate("fz", "0.1.4", "v0.1.5")
+        self.assertEqual(self.module.validate("fz", "0.1.4", "v0.1.4"), 104)

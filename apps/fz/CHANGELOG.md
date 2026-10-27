@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.4](https://github.com/JakobMelchard/android/compare/fz-v0.1.3...fz-v0.1.4) (2026-10-27)
+
+
+### Bug Fixes
+
+* **release:** preserve signing and original update feeds ([#1](https://github.com/JakobMelchard/android/issues/1)) ([d057cb3](https://github.com/JakobMelchard/android/commit/d057cb3f3e0a2bf0569286b7531715ffb9a7af92))
+
 ## [0.1.3](https://github.com/JakobMelchard/fz/compare/v0.1.2...v0.1.3) (2026-10-15)
 
 

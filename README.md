@@ -11,4 +11,4 @@ Version inputs are scoped: `-Pfz.versionName=0.1.0 -Pfz.versionCode=100`, or cor
 
 App IDs remain `io.lilfeelz.fz` and `io.jakobmelchard.pull`; minSDK29 and targetSDK35 stay unchanged. Compile SDK36 and the fz build baseline are shared. Each app retains separate version progression and releases. Existing Obtainium feeds and historical downloads must continue through a verified transition before old repositories can retire.
 
-The component release workflow is gated by two unset repository variables. Its proposed signing adapter selects only the released app's `FZ_*` or `PULL_*` GitHub secrets. Source/hash provenance, enablement requirements and the unexecuted cutover plan are recorded in `MIGRATION.md`.
+The component release workflow is gated by two unset repository variables. Signing keeps the original Infisical `/release` inputs and maps them to the selected app's `FZ_*` or `PULL_*` helper inputs. Source/hash provenance, enablement requirements and the unexecuted cutover plan are recorded in `MIGRATION.md`.

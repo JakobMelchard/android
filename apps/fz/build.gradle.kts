@@ -12,6 +12,7 @@ android {
         disable +=
             setOf(
                 "GradleDependency",
+                "AndroidGradlePluginVersion",
                 "NewerVersionAvailable",
                 "OldTargetApi",
                 "MissingApplicationIcon"

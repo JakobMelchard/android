@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.8](https://github.com/JakobMelchard/android/compare/pull-v0.1.7...pull-v0.1.8) (2026-10-28)
+
+
+### Bug Fixes
+
+* retire legacy android compatibility feeds ([#7](https://github.com/JakobMelchard/android/issues/7)) ([94d5053](https://github.com/JakobMelchard/android/commit/94d50533a271b71b5f6fc235a2eea937c7b82a17))
+
 ## [0.1.7](https://github.com/JakobMelchard/android/compare/pull-v0.1.6...pull-v0.1.7) (2026-10-27)
 
 

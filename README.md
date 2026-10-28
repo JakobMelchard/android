@@ -16,7 +16,7 @@ make check APP=pull
 
 Root Gradle `check` includes ktlint and Python release-contract tests. Each app keeps its own application code, version, signing identity and data. Both retain minSDK29 and targetSDK35. Version properties are scoped, for example `-Pfz.versionName=0.1.3 -Pfz.versionCode=103` and corresponding `pull.*` properties.
 
-Releases are built and signed here. Component tags are `fz-vX.Y.Z` and `pull-vX.Y.Z`. Existing Obtainium subscriptions stay on `JakobMelchard/fz` and `JakobMelchard/pull`: those repositories receive the identical verified APK and no longer build releases themselves.
+Releases are built and signed here. Component tags are `fz-vX.Y.Z` and `pull-vX.Y.Z`. Obtainium subscriptions use `https://github.com/JakobMelchard/android`, with a release-title filter of `fz:` or `pull:` to select the app. The original repositories are retired.
 
 The first migrated releases are fz0.1.4/code104 and pull0.1.7/code107. Both retain the original application IDs and signing certificate. No device installation or Home-app replacement runs automatically.
 

@@ -1,6 +1,6 @@
 # Android migration
 
-The private `JakobMelchard/android` repository owns fz and pull development, shared Gradle configuration and signed builds. The release handover is executed. `ANDROID_RELEASE_ENABLED=true` and `ANDROID_RELEASE_REPOSITORY=JakobMelchard/android`; the original repositories' release workflows are disabled.
+The `JakobMelchard/android` repository owns fz and pull development, shared Gradle configuration and signed builds. The release handover is executed. `ANDROID_RELEASE_ENABLED=true` and `ANDROID_RELEASE_REPOSITORY=JakobMelchard/android`; the original repositories' release workflows are disabled. The owner approved public visibility on 2026-10-27; infra declares the flip and its apply is the remaining step, after which hosted CI no longer counts against private minutes.
 
 ## Releases and existing installations
 
@@ -9,7 +9,7 @@ The private `JakobMelchard/android` repository owns fz and pull development, sha
 | fz | fz-v0.1.4 | 104 | https://github.com/JakobMelchard/fz |
 | pull | pull-v0.1.7 | 107 | https://github.com/JakobMelchard/pull |
 
-The canonical repository and both compatibility feeds serve the same signed APK bytes. Existing Obtainium subscriptions keep their URLs and private-repository credentials. Historical downloads and original repositories remain available and unarchived. Neither original workflow builds new releases.
+The canonical repository and both compatibility feeds serve the same signed APK bytes. Existing Obtainium subscriptions keep their URLs and private-repository credentials. Historical downloads and original repositories remain available and unarchived. Neither original workflow builds new releases. The owner decided on 2026-10-27 to keep the compatibility feeds for an announced overlap period: existing subscriptions keep receiving updates unchanged, and only after the migration is announced and confirmed is the compatibility upload in `scripts/publish-apk` removed and the component releases the sole feed.
 
 Both apps retain certificate SHA256 `d3f7764e66bd5041c2afdc71dca287f88008ab0ddb48aa5750c66270f7f429fd`. Their IDs remain `io.lilfeelz.fz` and `io.jakobmelchard.pull`; the previous distributed version codes were103 and106. All four published APKs were downloaded and compared to the signed candidates:
 
@@ -22,7 +22,7 @@ No physical device was installed, reset or uninstalled. Actual device-upgrade be
 
 Release-please manages independent component versions and creates draft release PRs. Tags and APK names include the app. Signing uses the existing Infisical non-recursive `/release` inputs, mapped only to the selected FZ or PULL helper. Keys are decoded into temporary files and removed after the build.
 
-Trusted main release jobs use the configured Mac runner. The enabled release controller passed with Infisical OIDC and an app token. Hosted CI remains blocked by billing; the owner approved local checks for this migration, and the first APKs were signed locally with the same checked build helpers. The controller's successful run is [40559087127](https://github.com/JakobMelchard/android/actions/runs/40559087127).
+Trusted main release jobs use the configured Mac runner. The enabled release controller passed with Infisical OIDC and an app token. Hosted CI was blocked by billing during the migration; the owner approved local checks for it, and the first APKs were signed locally with the same checked build helpers. Public visibility restores hosted CI. The controller's successful run is [40559087127](https://github.com/JakobMelchard/android/actions/runs/40559087127).
 
 `scripts/publish-apk` verifies the original certificate, app ID, version and increasing feed version, then uploads the canonical asset and the identical compatibility asset. Existing assets are immutable. Publishing gets a short-lived GitHub App token restricted to android and the selected compatibility repository; the signing job is separate. Manual workflow dispatch can retry an existing component tag.
 

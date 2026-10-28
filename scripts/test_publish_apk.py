@@ -57,8 +57,10 @@ class PublishTest(unittest.TestCase):
                     calls.append(args)
                     self.assertEqual(args[0], 'api')
                     self.assertTrue(args[1].startswith('repos/JakobMelchard/android/'))
-                    if '/git/matching-refs/' in args[1]:
-                        return [{'ref': f'refs/tags/{app}-v{version}'}]
+                    if '/tags?' in args[1]:
+                        self.assertIn('--paginate', args)
+                        self.assertIn('--slurp', args)
+                        return [[{'name': f'{app}-v{version}'}]]
                     return {'assets': []}
 
                 cert = f'certificate SHA-256 digest: {self.module.CERT}'
@@ -72,3 +74,19 @@ class PublishTest(unittest.TestCase):
                 self.assertTrue(calls)
                 self.assertEqual(upload.call_count, 1)
                 self.assertEqual(upload.call_args.args[:2], ('JakobMelchard/android', f'{app}-v{version}'))
+
+    def test_newer_component_tag_on_later_page_blocks_older_upload(self):
+        with tempfile.TemporaryDirectory() as temp:
+            apk = Path(temp) / 'fz-0.1.4.apk'
+            apk.write_bytes(b'verified apk')
+            cert = f'certificate SHA-256 digest: {self.module.CERT}'
+            meta = "package: name='io.lilfeelz.fz' versionCode='104' versionName='0.1.4'"
+            pages = [[{'name': 'pull-v9.0.0'}, {'name': 'fz-v0.1.4'}], [{'name': 'fz-v0.1.5'}]]
+            with patch.object(self.module, 'gh', return_value=pages), \
+                    patch.object(self.module, 'upload') as upload, \
+                    patch.object(self.module.subprocess, 'check_output', side_effect=[cert, meta]), \
+                    patch.dict(os.environ, {'ANDROID_HOME': temp}), \
+                    patch('sys.argv', ['publish-apk', 'fz', '0.1.4', str(apk)]):
+                with self.assertRaises(ValueError):
+                    self.module.main()
+                upload.assert_not_called()

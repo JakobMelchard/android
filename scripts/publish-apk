@@ -74,10 +74,11 @@ def main():
     digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     tag = f'{app}-v{version}'
     canonical = 'JakobMelchard/android'
-    refs = gh('api', f'repos/{canonical}/git/matching-refs/tags/{app}-v')
-    for ref in refs:
-        latest = ref['ref'].removeprefix('refs/tags/')
-        validate(app, version, latest)
+    pages = gh('api', f'repos/{canonical}/tags?per_page=100', '--paginate', '--slurp')
+    for page in pages:
+        for tag in page:
+            if tag['name'].startswith(f'{app}-v'):
+                validate(app, version, tag['name'])
     upload(canonical, tag, apk, digest)
     print(f'{app} {version}: APK verified, sha256 {digest}')
 

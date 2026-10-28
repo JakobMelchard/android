@@ -76,9 +76,9 @@ def main():
     canonical = 'JakobMelchard/android'
     pages = gh('api', f'repos/{canonical}/tags?per_page=100', '--paginate', '--slurp')
     for page in pages:
-        for tag in page:
-            if tag['name'].startswith(f'{app}-v'):
-                validate(app, version, tag['name'])
+        for entry in page:
+            if entry['name'].startswith(f'{app}-v'):
+                validate(app, version, entry['name'])
     upload(canonical, tag, apk, digest)
     print(f'{app} {version}: APK verified, sha256 {digest}')
 

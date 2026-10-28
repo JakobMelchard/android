@@ -22,7 +22,7 @@ ANDROID_SERIAL=emulator-5554 scripts/screenshots.sh   # regenerates docs/screens
 
 ## Install
 
-Releases carry a signed `pull-<version>.apk`; add the repo to [Obtainium](https://github.com/ImranR98/Obtainium) for updates (while the repo is private, Obtainium needs a GitHub token).
+Releases carry a signed `pull-<version>.apk`; add `https://github.com/JakobMelchard/android` to [Obtainium](https://github.com/ImranR98/Obtainium) and filter release titles by `pull:` for updates.
 
 ## Use
 
@@ -52,4 +52,4 @@ Switch the scale on, open the app and allow Bluetooth and location; it locks ont
 
 [MIT](LICENSE)
 
-Development and signed builds now live in `JakobMelchard/android`, under `apps/pull`. Existing Obtainium subscriptions stay on `https://github.com/JakobMelchard/pull`; releases there mirror the exact canonical APK.
+Development and signed builds now live in `JakobMelchard/android`, under `apps/pull`. Obtainium subscriptions must use `https://github.com/JakobMelchard/android` and filter release titles by `pull:`. The original repository is retired.

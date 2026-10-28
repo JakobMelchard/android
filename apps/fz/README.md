@@ -10,7 +10,7 @@ make -C ../.. emu     # boot the fz_pixel7 AVD
 make -C ../.. home APP=fz SERIAL=emulator-5554  # explicit owner action: install and set Home
 ```
 
-Releases carry a signed `fz-<version>.apk`; add `https://github.com/JakobMelchard/fz` to [Obtainium](https://obtainium.imranr.dev).
+Releases carry a signed `fz-<version>.apk`; add `https://github.com/JakobMelchard/android` to [Obtainium](https://obtainium.imranr.dev) and filter release titles by `fz:`.
 
 | Path | Contents |
 |---|---|
@@ -18,4 +18,4 @@ Releases carry a signed `fz-<version>.apk`; add `https://github.com/JakobMelchar
 | `src/main/java/io/lilfeelz/fz/Tokens.kt` | org design tokens |
 | `src/test/` | unit tests for the fuzzy match, frecency and ranking |
 
-Development and signed builds now live in `JakobMelchard/android`, under `apps/fz`. Existing Obtainium subscriptions stay on `https://github.com/JakobMelchard/fz`; releases there mirror the exact canonical APK.
+Development and signed builds now live in `JakobMelchard/android`, under `apps/fz`. Obtainium subscriptions must use `https://github.com/JakobMelchard/android` and filter release titles by `fz:`. The original repository is retired.

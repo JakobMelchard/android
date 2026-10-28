@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish a verified component APK and mirror identical bytes for existing Obtainium feeds."""
+"""Publish a verified component APK to the Android repository."""
 import hashlib
 import json
 import os
@@ -11,8 +11,8 @@ import tempfile
 
 CERT = 'd3f7764e66bd5041c2afdc71dca287f88008ab0ddb48aa5750c66270f7f429fd'
 APPS = {
-    'fz': ('io.lilfeelz.fz', 103, '78ce62c93017b17b77f4d3a93b16f464c2582fbc'),
-    'pull': ('io.jakobmelchard.pull', 106, '9a4a415e116946830fcf510df096a6df2cfaf37e'),
+    'fz': ('io.lilfeelz.fz', 103),
+    'pull': ('io.jakobmelchard.pull', 106),
 }
 
 
@@ -24,9 +24,9 @@ def validate(app, version, latest=None):
     if not APPS[app][1] < code <= 2100000000:
         raise ValueError('versionCode must exceed the original distributed app')
     if latest is not None:
-        match = re.fullmatch(r"v([0-9]+)\.([0-9]+)\.([0-9]+)", latest)
+        match = re.fullmatch(rf"{app}-v([0-9]+)\.([0-9]+)\.([0-9]+)", latest)
         if not match:
-            raise ValueError("unrecognized current compatibility version")
+            raise ValueError("unrecognized current component version")
         major, minor, patch = map(int, match.groups())
         if code < major * 10000 + minor * 100 + patch:
             raise ValueError("refusing to publish an older update than the existing feed")
@@ -41,7 +41,7 @@ def gh(*args):
 def upload(repo, tag, apk, digest):
     release = gh('api', f'repos/{repo}/releases/tags/{tag}')
     if release.get('draft') or release.get('prerelease'):
-        raise ValueError('canonical and compatibility releases must be published stable releases')
+        raise ValueError('release must be a published stable release')
     assets = [a for a in release['assets'] if a['name'] == apk.name]
     if assets:
         asset_digest = assets[0].get('digest')
@@ -74,23 +74,12 @@ def main():
     digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     tag = f'{app}-v{version}'
     canonical = 'JakobMelchard/android'
-    legacy = f'JakobMelchard/{app}'
-    latest = gh('api', f'repos/{legacy}/releases/latest')
-    validate(app, version, latest['tag_name'])
+    refs = gh('api', f'repos/{canonical}/git/matching-refs/tags/{app}-v')
+    for ref in refs:
+        latest = ref['ref'].removeprefix('refs/tags/')
+        validate(app, version, latest)
     upload(canonical, tag, apk, digest)
-    # Only a confirmed 404 permits creation; auth/network errors must stop publication.
-    try:
-        gh('api', f'repos/{legacy}/releases/tags/v{version}')
-    except subprocess.CalledProcessError as error:
-        if 'HTTP 404' not in (error.stderr or ''):
-            raise
-        notes = f'Compatibility download from https://github.com/{canonical}/releases/tag/{tag}\n\nBuilt and signed once in {canonical}; SHA256 {digest}. Development moved to {canonical}. This repository preserves existing Obtainium URLs.\n'
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.md') as body:
-            body.write(notes)
-            body.flush()
-            gh('release', 'create', f'v{version}', '--repo', legacy, '--target', APPS[app][2], '--title', f'v{version}', '--notes-file', body.name)
-    upload(legacy, f'v{version}', apk, digest)
-    print(f'{app} {version}: canonical and compatibility APKs verified, sha256 {digest}')
+    print(f'{app} {version}: APK verified, sha256 {digest}')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.5](https://github.com/JakobMelchard/android/compare/fz-v0.1.4...fz-v0.1.5) (2026-10-28)
+
+
+### Bug Fixes
+
+* retire legacy android compatibility feeds ([#7](https://github.com/JakobMelchard/android/issues/7)) ([94d5053](https://github.com/JakobMelchard/android/commit/94d50533a271b71b5f6fc235a2eea937c7b82a17))
+
 ## [0.1.4](https://github.com/JakobMelchard/android/compare/fz-v0.1.3...fz-v0.1.4) (2026-10-27)
 
 

@@ -1,8 +1,8 @@
 # Written by copier; do not edit. Update with `copier update`.
 _commit: v0.3.3-6-g1c64198
 _src_path: https://github.com/JakobMelchard/template.git
-android_apps: fz,pull
+android_apps: pull
 android_layout: multi
-description: 'Native Android applications: fz launcher and pull trainer'
+description: 'Native Android application: pull trainer'
 name: android
 template: android

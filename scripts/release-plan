@@ -22,7 +22,7 @@ try:
         raise ValueError("paths and release metadata must agree without duplicates")
     include = []
     for path in paths:
-        if path not in ("apps/fz", "apps/pull"):
+        if path != "apps/pull":
             raise ValueError("unknown release component")
         app = path.split("/")[1]
         release = releases[path]

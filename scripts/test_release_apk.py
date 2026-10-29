@@ -35,15 +35,15 @@ out.mkdir(parents=True)
         gradlew.chmod(0o755)
         self.env = os.environ.copy()
         self.env["PATH"] = str(self.root / "bin") + os.pathsep + self.env["PATH"]
-        for app in ("fz", "pull"):
+        for app in ("pull",):
             self.env[app.upper() + "_KEYSTORE_B64"] = base64.b64encode((app + "-key").encode()).decode()
             self.env[app.upper() + "_KEYSTORE_PASSWORD"] = "test-password"
 
-    def release(self, app="fz", version="1.2.3", **env):
+    def release(self, app="pull", version="1.2.3", **env):
         return subprocess.run([str(self.root / "scripts/release-apk"), app, version], cwd=self.root, env={**self.env, "TEST_APP":app, **env}, capture_output=True, text=True)
 
     def test_component_identity_version_and_key_are_isolated(self):
-        for app in ("fz", "pull"):
+        for app in ("pull",):
             with self.subTest(app=app):
                 result = self.release(app)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -59,9 +59,9 @@ out.mkdir(parents=True)
         build = workflow.read_text().split("      - name: build selected component\n", 1)[1]
         command = build.split("        run: |\n", 1)[1].split("      - uses:", 1)[0]
         command = textwrap.dedent(command)
-        for app in ("fz", "pull"):
+        for app in ("pull",):
             with self.subTest(app=app):
-                env = {k: v for k, v in self.env.items() if not k.startswith(("FZ_", "PULL_", "ANDROID_"))}
+                env = {k: v for k, v in self.env.items() if not k.startswith(("PULL_", "ANDROID_"))}
                 env.update({
                     "APP": app, "VERSION": "1.2.3", "TEST_APP": app,
                     "ANDROID_KEYSTORE_B64": base64.b64encode((app + "-original-key").encode()).decode(),
@@ -76,17 +76,17 @@ out.mkdir(parents=True)
                 self.assertFalse(Path(record["path"]).exists())
 
     def test_explicit_alias_is_retained(self):
-        result = self.release(PULL_KEY_ALIAS="unused", FZ_KEY_ALIAS="existing-fz")
+        result = self.release(PULL_KEY_ALIAS="existing-pull")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(json.loads((self.root / "record.json").read_text())["alias"], "existing-fz")
+        self.assertEqual(json.loads((self.root / "record.json").read_text())["alias"], "existing-pull")
 
-    def test_sibling_key_cannot_satisfy_missing_selected_key(self):
-        result = self.release(FZ_KEYSTORE_B64="")
+    def test_missing_selected_key_prevents_build(self):
+        result = self.release(PULL_KEYSTORE_B64="")
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.root / "record.json").exists())
 
     def test_unknown_app_rejected(self):
-        self.assertNotEqual(self.release("other").returncode, 0)
+        self.assertNotEqual(self.release("fz").returncode, 0)
         self.assertFalse((self.root / "record.json").exists())
 
     def test_ambiguous_or_invalid_versions_rejected(self):
@@ -100,7 +100,7 @@ out.mkdir(parents=True)
         self.assertEqual(result.returncode, 7)
         record = json.loads((self.root / "record.json").read_text())
         self.assertFalse(Path(record["path"]).exists())
-        self.assertFalse((self.root / "fz-1.2.3.apk").exists())
+        self.assertFalse((self.root / "pull-1.2.3.apk").exists())
 
 
 if __name__ == "__main__":

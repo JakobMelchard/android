@@ -14,4 +14,4 @@ dependencyResolutionManagement {
     }
 }
 rootProject.name = "android"
-include(":apps:fz", ":apps:pull")
+include(":apps:pull")

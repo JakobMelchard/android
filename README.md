@@ -1,23 +1,19 @@
-# Android applications
+# Android application
 
-Native Android apps sharing one Gradle build, dependency catalog and build conventions.
+Pull is a Bluetooth force trainer, `io.jakobmelchard.pull`, in `apps/pull`.
 
-- `apps/fz`: fuzzy-search Home launcher, `io.lilfeelz.fz`.
-- `apps/pull`: Bluetooth force trainer, `io.jakobmelchard.pull`.
-- `build-logic`: Android/Compose and lint conventions.
-- `gradle/libs.versions.toml`: shared toolchain and dependency versions.
+`build-logic` owns Android/Compose and lint conventions; `gradle/libs.versions.toml` owns the toolchain and dependency versions.
 
 Use JDK17 and the Android SDK:
 
 ```sh
-make check APP=fz
-make check APP=pull
+make check
 ```
 
-Root Gradle `check` includes ktlint and Python release-contract tests. Each app keeps its own application code, version, signing identity and data. Both retain minSDK29 and targetSDK35. Version properties are scoped, for example `-Pfz.versionName=0.1.3 -Pfz.versionCode=103` and corresponding `pull.*` properties.
+Root Gradle `check` includes ktlint and Python release-contract tests. Pull retains minSDK29 and targetSDK35. Version properties are scoped: `-Ppull.versionName=0.1.8 -Ppull.versionCode=108`.
 
-Releases are built and signed here. Component tags are `fz-vX.Y.Z` and `pull-vX.Y.Z`. Obtainium subscriptions use `https://github.com/JakobMelchard/android`, with a release-title filter of `fz:` or `pull:` to select the app. The original repositories are retired.
+Releases are built and signed here with tags `pull-vX.Y.Z`. Obtainium subscriptions use `https://github.com/JakobMelchard/android`, with a release-title filter of `pull:`. The original repository is retired.
 
-The first migrated releases are fz0.1.4/code104 and pull0.1.7/code107. Both retain the original application IDs and signing certificate. No device installation or Home-app replacement runs automatically.
+The first migrated release was pull-v0.1.7/code107. Pull retains its original application ID and signing certificate. Device installation requires explicit approval.
 
-See [MIGRATION.md](MIGRATION.md) for provenance, executed cutover and verification.
+See [MIGRATION.md](MIGRATION.md) for provenance, cutover and verification.

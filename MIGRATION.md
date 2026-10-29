@@ -27,4 +27,4 @@ Set repository variable `ANDROID_RELEASE_IDENTITY` to the Infisical identity for
 }
 ```
 
-The identity needs read-only access to the `gha` project for signing inputs under `/release` and the publishing app credentials. The reusable release-please workflow continues using the shared identity, whose `job_workflow_ref` restriction does not match local jobs.
+Assign a scoped read role in `gha`, limited to environment `dev`: signing inputs at `/release`, plus only `APP_CLIENT_ID` and `APP_PRIVATE_KEY` at `/`. Do not grant the project-wide Viewer role. The publishing actions request those two root credentials individually. The reusable release-please workflow continues using the shared identity, whose `job_workflow_ref` restriction does not match local jobs.

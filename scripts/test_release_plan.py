@@ -9,7 +9,7 @@ class ReleasePlanTest(unittest.TestCase):
     def plan(self, paths, releases):
         return subprocess.run(
             ["python3", str(Path(__file__).with_name("release-plan"))],
-            env={**os.environ, "PATHS_RELEASED": json.dumps(paths), "RELEASES": json.dumps(releases)},
+            env={**os.environ, "RETRY_APP": "auto", "PATHS_RELEASED": json.dumps(paths), "RELEASES": json.dumps(releases)},
             capture_output=True,
             text=True,
         )
@@ -59,7 +59,7 @@ class ReleasePlanTest(unittest.TestCase):
     def test_malformed_json_rejected(self):
         result = subprocess.run(
             ["python3", str(Path(__file__).with_name("release-plan"))],
-            env={**os.environ, "PATHS_RELEASED": "[", "RELEASES": "{}"},
+            env={**os.environ, "RETRY_APP": "auto", "PATHS_RELEASED": "[", "RELEASES": "{}"},
             capture_output=True, text=True,
         )
         self.assertNotEqual(result.returncode, 0)

@@ -8,7 +8,7 @@ Obtainium subscriptions must use `https://github.com/JakobMelchard/android` with
 
 Pull retains application ID `io.jakobmelchard.pull` and certificate SHA256 `d3f7764e66bd5041c2afdc71dca287f88008ab0ddb48aa5750c66270f7f429fd`. Its previous distributed versionCode was106. The first migrated APK's SHA256 was `5cf2cc2cff3e1367c8bd419a2201203ec2699555cf233865b92388c7160f7956`.
 
-No physical device was installed, reset or uninstalled during cutover. Actual device upgrades and BLE sessions still require an explicitly authorized device test.
+No physical device was used for app installation, app-data reset or app uninstallation during cutover. Actual device upgrades and BLE sessions still require an explicitly authorized device test.
 
 ## Source provenance
 

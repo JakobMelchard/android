@@ -14,6 +14,6 @@ Root Gradle `check` includes ktlint and Python release-contract tests. Pull reta
 
 Releases are built and signed here with tags `pull-vX.Y.Z`. Obtainium subscriptions use `https://github.com/JakobMelchard/android`, with a release-title filter of `pull:`. The original repository is retired.
 
-The first migrated release was pull0.1.7/code107. Pull retains its original application ID and signing certificate. Device installation requires explicit approval.
+The first migrated release was pull-v0.1.7/code107. Pull retains its original application ID and signing certificate. Device installation requires explicit approval.
 
 See [MIGRATION.md](MIGRATION.md) for provenance, cutover and verification.

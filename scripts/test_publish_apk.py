@@ -19,9 +19,10 @@ class PublishTest(unittest.TestCase):
 
     def test_unknown_component_and_invalid_versions_write_nothing(self):
         for app, version in [('fz', '1.2.3'), ('other', '0.1.7'), ('pull', '0.1.3'), ('pull', '0.1.6'), ('pull', '1.100.0')]:
-            with self.subTest(app=app, version=version), patch.object(self.module, 'gh') as gh:
+            with self.subTest(app=app, version=version), patch.object(self.module, 'gh') as gh, \
+                    patch('sys.argv', ['publish-apk', app, version, 'dummy.apk']):
                 with self.assertRaises(ValueError):
-                    self.module.validate(app, version)
+                    self.module.main()
                 gh.assert_not_called()
 
     def test_existing_matching_asset_is_immutable(self):

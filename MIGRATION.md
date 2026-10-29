@@ -13,3 +13,18 @@ No physical device was used for app installation, app-data reset or app uninstal
 ## Source provenance
 
 Initial import `d167341bd90b8f8b19aa8ec9c42de39c2ac932d5` preserves pull history at `9a4a415e116946830fcf510df096a6df2cfaf37e`. Application source, resources and tests were byte-preserved at import. Pull retains minSDK29, targetSDK35 and Java17.
+
+## Release authentication
+
+Set repository variable `ANDROID_RELEASE_IDENTITY` to the Infisical identity for local signing and upload jobs. Bind that identity to issuer `https://token.actions.githubusercontent.com`, audience `https://github.com/JakobMelchard`, subject `repo:JakobMelchard/android:ref:refs/heads/main`, and these exact claims:
+
+```json
+{
+  "repository": "JakobMelchard/android",
+  "repository_owner": "JakobMelchard",
+  "ref": "refs/heads/main",
+  "workflow_ref": "JakobMelchard/android/.github/workflows/release.yml@refs/heads/main"
+}
+```
+
+The identity needs read-only access to the `gha` project for signing inputs under `/release` and the publishing app credentials. The reusable release-please workflow continues using the shared identity, whose `job_workflow_ref` restriction does not match local jobs.

@@ -113,7 +113,7 @@ jobs:
       - uses: Infisical/secrets-action@d2e351f16c6ca20d17c85e6c992e04bdeb64e87d # v1.0.18
         with:
           method: oidc
-          identity-id: b1ede60d-f7a7-4699-86ec-eea6ac51be30 # gha-org
+          identity-id: ${{ vars.ANDROID_RELEASE_IDENTITY }}
           domain: https://eu.infisical.com
           project-slug: gha-lfq-y
           env-slug: dev
@@ -170,7 +170,7 @@ jobs:
       - uses: Infisical/secrets-action@d2e351f16c6ca20d17c85e6c992e04bdeb64e87d # v1.0.18
         with:
           method: oidc
-          identity-id: b1ede60d-f7a7-4699-86ec-eea6ac51be30 # gha-org
+          identity-id: ${{ vars.ANDROID_RELEASE_IDENTITY }}
           domain: https://eu.infisical.com
           project-slug: gha-lfq-y
           env-slug: dev
@@ -178,7 +178,7 @@ jobs:
       - uses: Infisical/secrets-action@d2e351f16c6ca20d17c85e6c992e04bdeb64e87d # v1.0.18
         with:
           method: oidc
-          identity-id: b1ede60d-f7a7-4699-86ec-eea6ac51be30 # gha-org
+          identity-id: ${{ vars.ANDROID_RELEASE_IDENTITY }}
           domain: https://eu.infisical.com
           project-slug: gha-lfq-y
           env-slug: dev

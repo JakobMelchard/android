@@ -16,7 +16,7 @@ Initial import `d167341bd90b8f8b19aa8ec9c42de39c2ac932d5` preserves pull history
 
 ## Release authentication
 
-Set repository variable `ANDROID_RELEASE_IDENTITY` to the Infisical identity for local signing and upload jobs. Bind that identity to issuer `https://token.actions.githubusercontent.com`, audience `https://github.com/JakobMelchard`, subject `repo:JakobMelchard/android:ref:refs/heads/main`, and these exact claims:
+Set repository variable `ANDROID_RELEASE_IDENTITY` to the Infisical identity for local signing and upload jobs. Bind that identity to issuer `https://token.actions.githubusercontent.com`, audience `https://github.com/JakobMelchard`, subject `repo:JakobMelchard@265134052/android@1435967147:ref:refs/heads/main`, and these exact claims:
 
 ```json
 {

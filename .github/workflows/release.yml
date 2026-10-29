@@ -43,7 +43,7 @@ jobs:
       always() && github.ref == 'refs/heads/main' &&
       vars.ANDROID_RELEASE_ENABLED == 'true' &&
       vars.ANDROID_RELEASE_REPOSITORY == github.repository &&
-      (needs.release.outputs.releases_created == 'true' ||
+      ((needs.release.result == 'success' && needs.release.outputs.releases_created == 'true') ||
        (github.event_name == 'workflow_dispatch' && inputs.app != 'auto'))
     runs-on: ${{ fromJSON(vars.RUNNER_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 5
@@ -72,7 +72,9 @@ jobs:
 
   apk:
     needs: plan
-    if: needs.plan.outputs.matrix != '{"include":[]}'
+    if: >-
+      !cancelled() && needs.plan.result == 'success' &&
+      needs.plan.outputs.matrix != '{"include":[]}'
     runs-on: ${{ fromJSON(vars.RUNNER_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
     permissions:
@@ -141,6 +143,7 @@ jobs:
   # Publishing receives app credentials, never the Android signing keystore.
   upload:
     needs: [plan, apk]
+    if: ${{ !cancelled() && needs.plan.result == 'success' && needs.apk.result == 'success' }}
     runs-on: ${{ fromJSON(vars.RUNNER_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 5
     permissions:

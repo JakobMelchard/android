@@ -3,11 +3,10 @@
 set -euo pipefail
 umask 077
 
-[ "$#" -eq 2 ] || { echo "usage: release-apk <fz|pull> <x.y.z>" >&2; exit 2; }
+[ "$#" -eq 2 ] || { echo "usage: release-apk <pull> <x.y.z>" >&2; exit 2; }
 app=$1
 version=$2
 case "$app" in
-  fz) prefix=FZ ;;
   pull) prefix=PULL ;;
   *) echo "unknown application: $app" >&2; exit 2 ;;
 esac

@@ -10,5 +10,5 @@ val releaseScriptTests by tasks.registering(Exec::class) {
 }
 
 tasks.named("check") {
-    dependsOn(releaseScriptTests, "ktlintCheck", ":apps:fz:ktlintCheck", ":apps:pull:ktlintCheck")
+    dependsOn(releaseScriptTests, "ktlintCheck", ":apps:pull:ktlintCheck")
 }

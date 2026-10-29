@@ -11,14 +11,13 @@ import tempfile
 
 CERT = 'd3f7764e66bd5041c2afdc71dca287f88008ab0ddb48aa5750c66270f7f429fd'
 APPS = {
-    'fz': ('io.lilfeelz.fz', 103),
     'pull': ('io.jakobmelchard.pull', 106),
 }
 
 
 def validate(app, version, latest=None):
     if app not in APPS or not re.fullmatch(r'(0|[1-9][0-9]{0,5})\.(0|[1-9][0-9]?)\.(0|[1-9][0-9]?)', version):
-        raise ValueError('expected fz|pull and x.y.z with minor/patch below 100')
+        raise ValueError('expected pull and x.y.z with minor/patch below 100')
     major, minor, patch = map(int, version.split('.'))
     code = major * 10000 + minor * 100 + patch
     if not APPS[app][1] < code <= 2100000000:
@@ -57,7 +56,7 @@ def upload(repo, tag, apk, digest):
 
 def main():
     if len(sys.argv) != 4:
-        raise ValueError('usage: publish-apk <fz|pull> <x.y.z> <apk>')
+        raise ValueError('usage: publish-apk <pull> <x.y.z> <apk>')
     app, version, filename = sys.argv[1:]
     code = validate(app, version)
     apk = Path(filename).resolve()

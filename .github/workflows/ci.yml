@@ -9,13 +9,12 @@ on:
   pull_request:
 
 jobs:
-  # One call for all apps keeps the required check names (ci / ci, ci / pr-title). The source owns the Gradle build and SDK.
+  # One call for pull keeps the required check names (ci / ci, ci / pr-title). The source owns the Gradle build and SDK.
   ci:
     uses: JakobMelchard/.github/.github/workflows/android.yml@df18859960a81d988ca3c7498bdd6a2dc976fec9 # v2.6.0
     with:
       gradle-tasks: >-
         check
-        :apps:fz:testDebugUnitTest :apps:fz:lintDebug :apps:fz:assembleDebug
         :apps:pull:testDebugUnitTest :apps:pull:lintDebug :apps:pull:assembleDebug
       artifact-path: apps/*/build/outputs/apk/debug/*.apk
 

@@ -61,8 +61,10 @@ jobs:
           RELEASES: ${{ needs.release.outputs.releases }}
           RETRY_APP: ${{ inputs.app || 'auto' }}
           RETRY_VERSION: ${{ inputs.version }}
+          ANDROID_RELEASE_IDENTITY: ${{ vars.ANDROID_RELEASE_IDENTITY }}
           GH_TOKEN: ${{ github.token }}
         run: |
+          : "${ANDROID_RELEASE_IDENTITY:?set repository variable ANDROID_RELEASE_IDENTITY before publishing}"
           matrix=$(python3 scripts/release-plan)
           if [ "$RETRY_APP" != auto ]; then
             tag=$(printf '%s' "$matrix" | python3 -c 'import json,sys; print(json.load(sys.stdin)["include"][0]["tag_name"])')

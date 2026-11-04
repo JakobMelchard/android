@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.text.DecimalFormatSymbols
 
 class MainActivity : ComponentActivity() {
   private lateinit var scale: Scale
@@ -258,14 +259,20 @@ fun Graph(pts: List<Reading>, from: Long, to: Long, modifier: Modifier = Modifie
   }
 }
 
+// The Decimal keyboard and kg() follow the locale, so a field shows and accepts its separator too.
+fun numText(x: Float, sep: Char = DecimalFormatSymbols.getInstance().decimalSeparator) =
+  (if (x % 1f == 0f) x.toInt().toString() else x.toString()).replace('.', sep)
+
+fun parseNum(s: String) = s.trim().replace(',', '.').toFloatOrNull()
+
 @Composable
 fun NumField(label: String, value: Float, onChange: (Float) -> Unit, modifier: Modifier = Modifier) {
-  var s by remember { mutableStateOf(if (value % 1f == 0f) value.toInt().toString() else value.toString()) }
+  var s by remember { mutableStateOf(numText(value)) }
   OutlinedTextField(
     s,
     {
       s = it
-      it.toFloatOrNull()?.let(onChange)
+      parseNum(it)?.let(onChange)
     },
     modifier,
     label = { Text(label) },

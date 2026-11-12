@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/JakobMelchard/android/compare/pull-v0.1.8...pull-v0.1.9) (2026-11-12)
+
+
+### Bug Fixes
+
+* **pull:** accept a decimal comma in number fields ([#15](https://github.com/JakobMelchard/android/issues/15)) ([9540af5](https://github.com/JakobMelchard/android/commit/9540af52fdfdb8ed0c63d84bdcd63fdf059d5dd5))
+
 ## [0.1.8](https://github.com/JakobMelchard/android/compare/pull-v0.1.7...pull-v0.1.8) (2026-10-28)
 
 

@@ -15,10 +15,20 @@ class NumFieldTest {
   }
 
   @Test
-  fun seedUsesTheLocaleSeparator() {
+  fun seedUsesGivenSeparator() {
     assertEquals("72,5", numText(72.5f, ','))
     assertEquals("72.5", numText(72.5f, '.'))
     assertEquals("70", numText(70f, ','))
-    assertEquals(72.5f, parseNum(numText(72.5f, ',')))
+  }
+
+  @Test
+  fun seededTextParsesBackForEverySeparator() {
+    for (sep in listOf(',', '.', '\u066B')) {
+      assertEquals(72.5f, parseNum(numText(72.5f, sep), sep))
+      assertEquals(72.6f, parseNum(numText(72.5f, sep).replace('5', '6'), sep))
+    }
+    // a period or comma typed by hand still parses under an Arabic locale
+    assertEquals(72.5f, parseNum("72.5", '\u066B'))
+    assertEquals(72.5f, parseNum("72,5", '\u066B'))
   }
 }

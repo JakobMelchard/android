@@ -263,7 +263,8 @@ fun Graph(pts: List<Reading>, from: Long, to: Long, modifier: Modifier = Modifie
 fun numText(x: Float, sep: Char = DecimalFormatSymbols.getInstance().decimalSeparator) =
   (if (x % 1f == 0f) x.toInt().toString() else x.toString()).replace('.', sep)
 
-fun parseNum(s: String) = s.trim().replace(',', '.').toFloatOrNull()
+fun parseNum(s: String, sep: Char = DecimalFormatSymbols.getInstance().decimalSeparator) =
+  s.trim().replace(sep, '.').replace(',', '.').toFloatOrNull()
 
 @Composable
 fun NumField(label: String, value: Float, onChange: (Float) -> Unit, modifier: Modifier = Modifier) {

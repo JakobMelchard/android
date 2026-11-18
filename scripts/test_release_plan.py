@@ -20,36 +20,28 @@ class ReleasePlanTest(unittest.TestCase):
         self.assertEqual(json.loads(result.stdout), {"include": []})
 
     def test_pull_selects_only_its_own_metadata(self):
-        for apps in (("pull",),):
-            with self.subTest(apps=apps):
-                releases = {
-                    f"apps/{app}": {"tag_name": f"{app}-v1.2.{i}", "version": f"1.2.{i}"}
-                    for i, app in enumerate(apps)
-                }
-                result = self.plan(list(releases), releases)
-                self.assertEqual(result.returncode, 0, result.stderr)
-                self.assertEqual(
-                    json.loads(result.stdout)["include"],
-                    [
-                        {"app": app, "prefix": app.upper(), **releases[f"apps/{app}"]}
-                        for app in apps
-                    ],
-                )
+        releases = {".": {"tag_name": "pull-v1.2.0", "version": "1.2.0"}}
+        result = self.plan(list(releases), releases)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            json.loads(result.stdout)["include"],
+            [{"app": "pull", "prefix": "PULL", **releases["."]}],
+        )
 
     def test_inconsistent_unknown_or_unsafe_metadata_fails_closed(self):
         valid = {"tag_name": "pull-v1.2.3", "version": "1.2.3"}
         cases = [
-            (["."], {".": valid}),
-            (["apps/pull"], {}),
-            ([], {"apps/pull": valid}),
-            (["apps/pull", "apps/pull"], {"apps/pull": valid}),
-            ({"apps/pull": valid}, {"apps/pull": valid}),
+            (["apps/pull"], {"apps/pull": valid}),
+            (["."], {}),
+            ([], {".": valid}),
+            ([".", "."], {".": valid}),
+            ({".": valid}, {".": valid}),
             ([1], {}),
-            (["apps/pull"], {"apps/pull": None}),
-            (["apps/pull"], {"apps/pull": {"tag_name": "other-v1.2.3", "version": "1.2.3"}}),
+            (["."], {".": None}),
+            (["."], {".": {"tag_name": "other-v1.2.3", "version": "1.2.3"}}),
         ]
         for version in ("01.2.3", "1.100.0", "1.0.100", "210001.0.0", "1.2.3;echo bad", "1.2.3\n", 123):
-            cases.append((["apps/pull"], {"apps/pull": {"tag_name": f"pull-v{version}", "version": version}}))
+            cases.append((["."], {".": {"tag_name": f"pull-v{version}", "version": version}}))
         for paths, releases in cases:
             with self.subTest(paths=paths, releases=releases):
                 result = self.plan(paths, releases)

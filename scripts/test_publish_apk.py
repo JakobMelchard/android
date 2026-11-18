@@ -27,19 +27,19 @@ class PublishTest(unittest.TestCase):
 
     def test_existing_matching_asset_is_immutable(self):
         with patch.object(self.module, 'gh', return_value={'assets': [{'name': 'pull-0.1.7.apk', 'digest': 'sha256:abc'}]}) as gh:
-            self.module.upload('JakobMelchard/android', 'pull-v0.1.7', Path('pull-0.1.7.apk'), 'abc')
+            self.module.upload('JakobMelchard/pull', 'pull-v0.1.7', Path('pull-0.1.7.apk'), 'abc')
             self.assertEqual(gh.call_count, 1)
 
     def test_existing_different_asset_refuses_overwrite(self):
         with patch.object(self.module, 'gh', return_value={'assets': [{'name': 'pull-0.1.7.apk', 'digest': 'sha256:other'}]}) as gh:
             with self.assertRaises(ValueError):
-                self.module.upload('JakobMelchard/android', 'pull-v0.1.7', Path('pull-0.1.7.apk'), 'abc')
+                self.module.upload('JakobMelchard/pull', 'pull-v0.1.7', Path('pull-0.1.7.apk'), 'abc')
             self.assertEqual(gh.call_count, 1)
 
     def test_missing_canonical_release_never_creates_a_tag_or_mirror(self):
         with patch.object(self.module, 'gh', side_effect=subprocess.CalledProcessError(1, 'gh')) as gh:
             with self.assertRaises(subprocess.CalledProcessError):
-                self.module.upload('JakobMelchard/android', 'pull-v0.1.7', Path('pull-0.1.7.apk'), 'abc')
+                self.module.upload('JakobMelchard/pull', 'pull-v0.1.7', Path('pull-0.1.7.apk'), 'abc')
             self.assertEqual(gh.call_count, 1)
 
     def test_retry_cannot_make_an_older_version_the_feed_latest(self):
@@ -57,7 +57,7 @@ class PublishTest(unittest.TestCase):
                 def gh(*args):
                     calls.append(args)
                     self.assertEqual(args[0], 'api')
-                    self.assertTrue(args[1].startswith('repos/JakobMelchard/android/'))
+                    self.assertTrue(args[1].startswith('repos/JakobMelchard/pull/'))
                     if '/tags?' in args[1]:
                         self.assertIn('--paginate', args)
                         self.assertIn('--slurp', args)
@@ -74,7 +74,7 @@ class PublishTest(unittest.TestCase):
                     self.module.main()
                 self.assertTrue(calls)
                 self.assertEqual(upload.call_count, 1)
-                self.assertEqual(upload.call_args.args[:2], ('JakobMelchard/android', f'{app}-v{version}'))
+                self.assertEqual(upload.call_args.args[:2], ('JakobMelchard/pull', f'{app}-v{version}'))
 
     def test_newer_component_tag_on_later_page_blocks_older_upload(self):
         with tempfile.TemporaryDirectory() as temp:

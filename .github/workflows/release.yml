@@ -191,7 +191,7 @@ jobs:
           client-id: ${{ env.APP_CLIENT_ID }}
           private-key: ${{ env.APP_PRIVATE_KEY }}
           owner: JakobMelchard
-          repositories: android
+          repositories: pull
           permission-contents: write
       - name: publish component APK
         env:

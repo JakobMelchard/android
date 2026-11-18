@@ -8,11 +8,6 @@ charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
-[*.{kt,kts}]
-indent_size = 4
-ktlint_code_style = android_studio
-ktlint_function_naming_ignore_when_annotated_with = Composable
-
 [*.md]
 trim_trailing_whitespace = false
 
@@ -24,3 +19,14 @@ indent_style = tab
 
 [*.py]
 indent_size = 4
+
+[*.{kt,kts}]
+ktlint_code_style = intellij_idea
+max_line_length = 140
+ktlint_function_naming_ignore_when_annotated_with = Composable
+ktlint_standard_blank-line-between-when-conditions = disabled
+compose_allowed_composition_locals = LocalPalette
+
+# Vendored from JakobMelchard/web; regenerated there, never edited here.
+[src/main/kotlin/tokens/*.kt]
+ktlint = disabled

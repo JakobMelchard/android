@@ -14,9 +14,8 @@ jobs:
     uses: JakobMelchard/.github/.github/workflows/android.yml@df18859960a81d988ca3c7498bdd6a2dc976fec9 # v2.6.0
     with:
       gradle-tasks: >-
-        check
-        :apps:pull:testDebugUnitTest :apps:pull:lintDebug :apps:pull:assembleDebug
-      artifact-path: apps/*/build/outputs/apk/debug/*.apk
+        check testDebugUnitTest lintDebug assembleDebug
+      artifact-path: build/outputs/apk/debug/*.apk
 
   hooks:
     uses: JakobMelchard/.github/.github/workflows/hooks.yml@df18859960a81d988ca3c7498bdd6a2dc976fec9 # v2.6.0

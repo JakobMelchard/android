@@ -1,19 +1,55 @@
-# Android application
+# pull
 
-Pull is a Bluetooth force trainer, `io.jakobmelchard.pull`, in `apps/pull`.
+Android force trainer for the WH-C06 Bluetooth crane scale, a cheap stand-in for a Tindeq Progressor: live force, max pull tests, repeaters and per-grip high scores.
 
-`build-logic` owns Android/Compose and lint conventions; `gradle/libs.versions.toml` owns the toolchain and dependency versions.
+<table>
+  <tr>
+    <td align="center"><img alt="Live force with peak, average and a 10 s graph" src="docs/screenshots/live.png" width="160"><br><sub>Live</sub></td>
+    <td align="center"><img alt="Max test setup with grip, hand and the high score" src="docs/screenshots/max.png" width="160"><br><sub>Max</sub></td>
+    <td align="center"><img alt="Repeaters mid-pull with the target band" src="docs/screenshots/repeaters.png" width="160"><br><sub>Repeaters</sub></td>
+    <td align="center"><img alt="Grips with best max per hand" src="docs/screenshots/grips.png" width="160"><br><sub>Grips</sub></td>
+    <td align="center"><img alt="History with the max-pull trend" src="docs/screenshots/history.png" width="160"><br><sub>History</sub></td>
+  </tr>
+</table>
 
-Use JDK17 and the Android SDK:
+## Build
 
 ```sh
 make check
+# Device installation remains an explicit owner action.
+ANDROID_SERIAL=emulator-5554 scripts/screenshots.sh   # regenerates docs/screenshots, emulator only
 ```
 
-Root Gradle `check` includes ktlint and Python release-contract tests. Pull retains minSDK29 and targetSDK35. Version properties are scoped: `-Ppull.versionName=0.1.8 -Ppull.versionCode=108`.
+## Install
 
-Releases are built and signed here with tags `pull-vX.Y.Z`. Obtainium subscriptions use `https://github.com/JakobMelchard/android`, with a release-title filter of `pull:`. The original repository is retired.
+Releases carry a signed `pull-<version>.apk`; add `https://github.com/JakobMelchard/pull` to [Obtainium](https://github.com/ImranR98/Obtainium) and filter release titles by `pull:` for updates.
 
-The first migrated release was pull-v0.1.7/code107. Pull retains its original application ID and signing certificate. Device installation requires explicit approval.
+## Use
 
-See [MIGRATION.md](MIGRATION.md) for provenance, cutover and verification.
+Switch the scale on, open the app and allow Bluetooth and location; it locks onto the first WH-C06 it hears. Press Tare with nothing hanging.
+
+| Tab | What it does |
+|---|---|
+| Live | force, peak and average over the last 10 s; Record saves a session |
+| Max | countdown, timed max pull per grip and hand, high score and bodyweight percentage |
+| Repeat | work/rest repeaters with sets, a target band and time in target |
+| Grips | add and delete grips, best max per hand |
+| History | every session and the max-pull trend for the current grip |
+
+## Layout
+
+| Path | Contents |
+|---|---|
+| `src/main/kotlin/Scale.kt` | scan, packet decode, tare, debug demo feed |
+| `src/main/kotlin/Store.kt` | sessions, grips, high scores, settings |
+| `src/main/kotlin/Screens.kt` | the five tabs |
+| `src/main/kotlin/Theme.kt` | palette, type scale, shared components |
+| `src/main/kotlin/tokens/Tokens.kt` | colours and radii vendored from [JakobMelchard/web](https://github.com/JakobMelchard/web) `dist/tokens.kt` |
+| `scripts/` | `screenshots.sh` and its demo sessions |
+| `scripts/release-apk` | release-please, then the signed APK |
+
+## License
+
+[MIT](LICENSE)
+
+Development and signed builds live in `JakobMelchard/pull`. Obtainium subscriptions must use `https://github.com/JakobMelchard/pull` and filter release titles by `pull:`. The original repository is retired.

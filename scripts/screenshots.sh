@@ -22,7 +22,7 @@ tap() {
 shot() { "$adb" exec-out screencap -p >"$out/$1.png"; }
 sysui() { "$adb" shell am broadcast -a com.android.systemui.demo -e command "$@" >/dev/null; }
 
-../../gradlew -p ../.. -q :apps:pull:assembleDebug
+./gradlew -q assembleDebug
 "$adb" install -r -g build/outputs/apk/debug/pull-debug.apk >/dev/null
 night=$("$adb" shell cmd uimode night | tr -d '\r' | awk '{print $NF}')
 "$adb" shell cmd uimode night yes >/dev/null

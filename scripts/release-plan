@@ -8,7 +8,7 @@ import sys
 try:
     retry = os.environ.get("RETRY_APP", "auto")
     if retry != "auto":
-        paths = [f"apps/{retry}"]
+        paths = ["." if retry == "pull" else f"apps/{retry}"]
         version = os.environ.get("RETRY_VERSION", "")
         releases = {paths[0]: {"version": version, "tag_name": f"{retry}-v{version}"}}
     else:
@@ -22,9 +22,9 @@ try:
         raise ValueError("paths and release metadata must agree without duplicates")
     include = []
     for path in paths:
-        if path != "apps/pull":
+        if path != ".":
             raise ValueError("unknown release component")
-        app = path.split("/")[1]
+        app = "pull"
         release = releases[path]
         if not isinstance(release, dict):
             raise ValueError("expected component release metadata")

@@ -37,5 +37,5 @@ fi
 export "${prefix}_KEY_ALIAS=$alias"
 
 cd "$(dirname "$0")/.."
-./gradlew --no-daemon ":apps:$app:assembleRelease"   "-P$app.versionName=$version" "-P$app.versionCode=$code"
-cp "apps/$app/build/outputs/apk/release/$app-release.apk" "$app-$version.apk"
+./gradlew --no-daemon "assembleRelease"   "-P$app.versionName=$version" "-P$app.versionCode=$code"
+cp "build/outputs/apk/release/$app-release.apk" "$app-$version.apk"

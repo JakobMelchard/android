@@ -72,7 +72,7 @@ def main():
         raise ValueError('APK identity or version does not match the release')
     digest = hashlib.sha256(apk.read_bytes()).hexdigest()
     tag = f'{app}-v{version}'
-    canonical = 'JakobMelchard/android'
+    canonical = 'JakobMelchard/pull'
     pages = gh('api', f'repos/{canonical}/tags?per_page=100', '--paginate', '--slurp')
     for page in pages:
         for entry in page:

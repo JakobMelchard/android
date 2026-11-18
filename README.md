@@ -51,5 +51,3 @@ Switch the scale on, open the app and allow Bluetooth and location; it locks ont
 ## License
 
 [MIT](LICENSE)
-
-Development and signed builds live in `JakobMelchard/pull`. Obtainium subscriptions must use `https://github.com/JakobMelchard/pull` and filter release titles by `pull:`. The original repository is retired.

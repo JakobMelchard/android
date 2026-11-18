@@ -112,6 +112,9 @@ jobs:
       - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
         with:
           cache-provider: basic
+      # Infisical OIDC (ANDROID_RELEASE_IDENTITY): issuer https://token.actions.githubusercontent.com,
+      # audience https://github.com/JakobMelchard, subject repo:JakobMelchard@265134052/pull@1435967147:ref:refs/heads/main,
+      # claims: repository=JakobMelchard/pull, repository_owner=JakobMelchard, ref=refs/heads/main, workflow_ref=JakobMelchard/pull/.github/workflows/release.yml@refs/heads/main
       - uses: Infisical/secrets-action@d2e351f16c6ca20d17c85e6c992e04bdeb64e87d # v1.0.18
         with:
           method: oidc

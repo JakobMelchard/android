@@ -1,3 +1,6 @@
-# Android app
+# pull
 
-Use the Makefile with JDK17. Never install on a device without explicit owner approval. Preserve pull's source history, application ID and signing identity at the repository root. Signing inputs stay in Infisical; never print or commit them. Publish only verified increasing versions with scripts/publish-apk; publish only to JakobMelchard/pull. The original repository is retired.
+Use the Makefile with JDK 17. Never install on a device without explicit owner approval.
+Preserve the application ID and signing identity at the repository root. Signing inputs
+stay in the secret store; never print or commit them. Publish only verified increasing
+versions with `scripts/publish-apk`.

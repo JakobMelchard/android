@@ -1,6 +1,7 @@
 # pull
 
-Android force trainer for the WH-C06 Bluetooth crane scale, a cheap stand-in for a Tindeq Progressor: live force, max pull tests, repeaters and per-grip high scores.
+Android force trainer for the WH-C06 Bluetooth crane scale, a cheap stand-in for a
+Tindeq Progressor: live force, max pull tests, repeaters and per-grip high scores.
 
 <table>
   <tr>
@@ -12,21 +13,16 @@ Android force trainer for the WH-C06 Bluetooth crane scale, a cheap stand-in for
   </tr>
 </table>
 
-## Build
-
-```sh
-make check
-# Device installation remains an explicit owner action.
-ANDROID_SERIAL=emulator-5554 scripts/screenshots.sh   # regenerates docs/screenshots, emulator only
-```
-
 ## Install
 
-Releases carry a signed `pull-<version>.apk`; add `https://github.com/JakobMelchard/pull` to [Obtainium](https://github.com/ImranR98/Obtainium) and filter release titles by `pull:` for updates.
+Download `pull-<version>.apk` from [releases](https://github.com/JakobMelchard/pull/releases).
+For automatic updates, add the repository to
+[Obtainium](https://github.com/ImranR98/Obtainium) and filter release titles by `pull:`.
 
 ## Use
 
-Switch the scale on, open the app and allow Bluetooth and location; it locks onto the first WH-C06 it hears. Press Tare with nothing hanging.
+Switch the scale on, open the app and allow Bluetooth and location. It locks onto the
+first WH-C06 it hears. Press Tare with nothing hanging.
 
 | Tab | What it does |
 |---|---|
@@ -36,7 +32,14 @@ Switch the scale on, open the app and allow Bluetooth and location; it locks ont
 | Grips | add and delete grips, best max per hand |
 | History | every session and the max-pull trend for the current grip |
 
-## Layout
+## Architecture
+
+```text
+BLE scale ──▶ Scale.kt ──▶ Screens.kt ──▶ Store.kt
+                 │              │            │
+                 │              └── theme, layouts
+                 └── scan, decode, tare
+```
 
 | Path | Contents |
 |---|---|
@@ -44,12 +47,17 @@ Switch the scale on, open the app and allow Bluetooth and location; it locks ont
 | `src/main/kotlin/Store.kt` | sessions, grips, high scores, settings |
 | `src/main/kotlin/Screens.kt` | the five tabs |
 | `src/main/kotlin/Theme.kt` | palette, type scale, shared components |
-| `src/main/kotlin/tokens/Tokens.kt` | colours and radii vendored from [JakobMelchard/web](https://github.com/JakobMelchard/web) `dist/tokens.kt` |
 | `scripts/` | `screenshots.sh` and its demo sessions |
-| `scripts/release-apk` | release-please, then the signed APK |
+
+## Build
+
+```sh
+make check
+ANDROID_SERIAL=emulator-5554 scripts/screenshots.sh   # regenerates docs/screenshots, emulator only
+```
+
+Installation on a physical device is a manual step.
 
 ## License
 
 [MIT](LICENSE)
-
-Development and signed builds live in `JakobMelchard/pull`. Obtainium subscriptions must use `https://github.com/JakobMelchard/pull` and filter release titles by `pull:`. The original repository is retired.
